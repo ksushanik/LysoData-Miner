@@ -12,6 +12,7 @@ from typing import List, Optional, Dict, Any
 import json
 import logging
 import traceback
+from pydantic import BaseModel, Field
 
 from app.database.connection import get_database_session
 from app.models.strain import Strain, StrainCollection
@@ -337,4 +338,71 @@ async def list_species(
         return {"species": species_list, "total": len(species_list)}
     except Exception as e:
         logging.error(f"Error fetching species list: {e}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve species list") 
+        raise HTTPException(status_code=500, detail="Failed to retrieve species list")
+
+
+class StrainIdsRequest(BaseModel):
+    strain_ids: List[int] = Field(..., description="List of strain IDs to fetch (max 20)")
+
+@router.post("/strains/batch", summary="Fetch multiple strains by IDs")
+async def get_strains_batch(
+    payload: StrainIdsRequest,
+    db: AsyncSession = Depends(get_database_session)
+):
+    """Return detailed data for multiple strains (max 20)."""
+    ids = payload.strain_ids[:20]
+    if not ids:
+        raise HTTPException(status_code=400, detail="strain_ids list is empty")
+
+    try:
+        query = select(Strain).options(
+            selectinload(Strain.data_source),
+            selectinload(Strain.collections).selectinload(StrainCollection.collection_number),
+            selectinload(Strain.boolean_results).options(
+                selectinload(TestResultBoolean.test).selectinload(Test.category),
+                selectinload(TestResultBoolean.test_value).selectinload(TestValue.test)
+            ),
+            selectinload(Strain.numeric_results).options(
+                selectinload(TestResultNumeric.test).selectinload(Test.category)
+            ),
+            selectinload(Strain.text_results).options(
+                selectinload(TestResultText.test).selectinload(Test.category)
+            )
+        ).where(Strain.strain_id.in_(ids))
+
+        result = await db.execute(query)
+        strains = result.scalars().all()
+
+        formatted = []
+        for s in strains:
+            formatted.append({
+                "strain_id": s.strain_id,
+                "strain_identifier": s.strain_identifier,
+                "scientific_name": s.scientific_name,
+                "common_name": s.common_name,
+                "is_active": s.is_active,
+                "description": s.description,
+                "test_results": [
+                    {
+                        "test_name": r.test.test_name if r.test else None,
+                        "result": r.test_value.value_name if r.test_value else None,
+                        "category": r.test.category.description if r.test and r.test.category else None
+                    } for r in s.boolean_results or []
+                ] + [
+                    {
+                        "test_name": r.test.test_name if r.test else None,
+                        "result": str(r.numeric_value),
+                        "category": r.test.category.description if r.test and r.test.category else None
+                    } for r in s.numeric_results or []
+                ] + [
+                    {
+                        "test_name": r.test.test_name if r.test else None,
+                        "result": r.text_value,
+                        "category": r.test.category.description if r.test and r.test.category else None
+                    } for r in s.text_results or []
+                ]
+            })
+        return {"strains": formatted}
+    except Exception as e:
+        logging.error(f"Error fetching batch strains: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve strains batch") 
