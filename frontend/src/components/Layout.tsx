@@ -9,7 +9,7 @@ interface LayoutProps {
 
 const navigation = [
   { name: 'Browse Strains', href: '/strains' },
-  { name: 'Identify Strain', href: '/' },
+  { name: 'Identify Strain', href: '/identify' },
   { name: 'About', href: '/about' },
 ]
 
