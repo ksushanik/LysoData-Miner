@@ -1,4 +1,5 @@
-import { Strain, StrainData } from '../types';
+import { Strain } from '../types';
+import type { TestCategory, Test } from '../types';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -18,6 +19,12 @@ export interface StrainPayload {
   gc_content_optimal?: number;
   notes?: string;
   is_active?: boolean;
+  test_results?: any[];
+}
+
+export interface TestCategoryWithTests extends TestCategory {
+  tests: Test[]
+  test_count?: number
 }
 
 export const fetchStrainDetails = async (strainId: string): Promise<Strain> => {
@@ -54,4 +61,11 @@ export const deleteStrain = async (id: number, soft: boolean = true) => {
     method: 'DELETE'
   });
   if (!res.ok) throw new Error(await res.text());
-}; 
+};
+
+export const fetchTestCategories = async (includeTests: boolean = true): Promise<TestCategoryWithTests[]> => {
+  const res = await fetch(`${API_BASE_URL}/tests/categories?include_tests=${includeTests}`)
+  if (!res.ok) throw new Error(await res.text())
+  const data = await res.json()
+  return data.categories as TestCategoryWithTests[]
+} 
