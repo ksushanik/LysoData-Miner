@@ -6,6 +6,9 @@ import SpeciesDetail from './pages/SpeciesDetail'
 import StrainDetail from './pages/StrainDetail'
 import About from './pages/About'
 import Identification from './pages/Identification'
+import ComparePage from './pages/ComparePage'
+import CreateStrainPage from './pages/CreateStrainPage'
+import EditStrainPage from './pages/EditStrainPage'
 
 function App() {
   return (
@@ -16,9 +19,12 @@ function App() {
           <Route path="/strains" element={<SpeciesBrowser />} />
           <Route path="/strains/species/:scientificName" element={<SpeciesDetail />} />
           <Route path="/strains/:strainId" element={<StrainDetail />} />
+          <Route path="/strains/new" element={<CreateStrainPage />} />
+          <Route path="/strains/:strainId/edit" element={<EditStrainPage />} />
           <Route path="/identify" element={<Navigate to="/" replace />} />
           <Route path="/about" element={<About />} />
           <Route path="/identification" element={<Identification />} />
+          <Route path="/compare" element={<ComparePage />} />
         </Routes>
       </Layout>
     </div>

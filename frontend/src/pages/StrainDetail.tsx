@@ -124,8 +124,29 @@ const StrainDetail: React.FC = () => {
                     <ArrowLeft className="mr-2" size={18} />
                     Назад к списку штаммов
                 </Link>
-                <h1 className="text-4xl font-bold text-gray-900 mt-4">{strainData.strain_identifier}</h1>
-                <p className="text-lg text-gray-600 italic">{strainData.scientific_name}</p>
+                <div className="flex items-start justify-between flex-wrap gap-4 mt-4">
+                  <div>
+                    <h1 className="text-4xl font-bold text-gray-900">{strainData.strain_identifier}</h1>
+                    <p className="text-lg text-gray-600 italic">{strainData.scientific_name}</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link to={`/strains/${strainId}/edit`} className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 text-sm">Редактировать</Link>
+                    <button
+                      onClick={async () => {
+                        if (confirm('Удалить этот штамм?')) {
+                          try {
+                            await fetch(`http://localhost:8000/api/strains/${strainId}`, { method: 'DELETE' })
+                            alert('Штамм удалён')
+                            window.location.href = '/strains'
+                          } catch (e) {
+                            alert('Ошибка удаления')
+                          }
+                        }
+                      }}
+                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
+                    >Удалить</button>
+                  </div>
+                </div>
             </div>
 
             <DetailCard title="Общая информация" icon={<Dna size={22} />}>

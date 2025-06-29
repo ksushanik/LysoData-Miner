@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { Link } from 'react-router-dom'
+import { CompareContext } from '../context/CompareContext'
 
 interface Strain {
   strain_id: number
@@ -34,6 +35,7 @@ export default function StrainBrowser() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(0)
+  const { selected, toggle } = useContext(CompareContext)
 
   const fetchStrains = async (page = 0, search = '') => {
     setLoading(true)
@@ -105,11 +107,14 @@ export default function StrainBrowser() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Strain Browser</h1>
-        <p className="text-gray-600">
-          Browse and search through the Lysobacter strain database
-        </p>
+      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Strain Browser</h1>
+          <p className="text-gray-600">
+            Browse and search through the Lysobacter strain database
+          </p>
+        </div>
+        <Link to="/strains/new" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Новый штамм</Link>
       </div>
 
       {/* Search Form */}
@@ -191,9 +196,17 @@ export default function StrainBrowser() {
             </div>
             
             <div className="mt-4 pt-3 border-t border-gray-100">
-              <Link to={`/strains/${strain.strain_id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                View Details →
-              </Link>
+              <div className="flex items-center justify-between">
+                <Link to={`/strains/${strain.strain_id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  View Details →
+                </Link>
+                <button
+                  onClick={() => toggle(strain.strain_id)}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  {selected.includes(strain.strain_id) ? '− Убрать' : '+ В сравнение'}
+                </button>
+              </div>
             </div>
           </div>
         ))}
