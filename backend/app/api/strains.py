@@ -433,11 +433,11 @@ class StrainBase(BaseModel):
 
 class StrainCreate(StrainBase):
     strain_identifier: str = Field(..., max_length=100)
-    test_results: Optional[List[TestResultIn]] = None
+    test_results: Optional[List["TestResultIn"]] = None
 
 
 class StrainUpdate(StrainBase):
-    test_results: Optional[List[TestResultIn]] = None
+    test_results: Optional[List["TestResultIn"]] = None
 
 
 # === Test result input schemas ===
@@ -463,6 +463,10 @@ class TextResultIn(BaseModel):
 
 
 TestResultIn = Annotated[Union[BooleanResultIn, NumericResultIn, TextResultIn], Field(discriminator='type')]
+
+# allow forward reference in StrainCreate/Update
+StrainCreate.update_forward_refs(TestResultIn=TestResultIn)
+StrainUpdate.update_forward_refs(TestResultIn=TestResultIn)
 
 
 # ------------------------------------------------
