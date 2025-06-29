@@ -6,9 +6,9 @@ CRUD operations and search functionality for bacterial strains.
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text, func, or_, and_
+from sqlalchemy import select, text, func, or_, and_, delete
 from sqlalchemy.orm import selectinload
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal, Union, Annotated
 import json
 import logging
 import traceback
@@ -433,10 +433,11 @@ class StrainBase(BaseModel):
 
 class StrainCreate(StrainBase):
     strain_identifier: str = Field(..., max_length=100)
+    test_results: Optional[List[TestResultIn]] = None
 
 
 class StrainUpdate(StrainBase):
-    pass
+    test_results: Optional[List[TestResultIn]] = None
 
 
 # ------------------------------------------------
@@ -470,9 +471,11 @@ async def create_strain(payload: StrainCreate, db: AsyncSession = Depends(get_da
         )
 
         db.add(new_strain)
-        await db.commit()
-        await db.refresh(new_strain)
+        await db.flush()  # get id
 
+        await _persist_test_results(db, new_strain.strain_id, payload.test_results)
+
+        await db.commit()
         return {"strain_id": new_strain.strain_id}
 
     except HTTPException:
@@ -503,12 +506,20 @@ async def update_strain(strain_id: int, payload: StrainUpdate, db: AsyncSession 
             if dup_check.scalar_one_or_none():
                 raise HTTPException(status_code=409, detail="Another strain with this identifier already exists")
 
-        update_data = payload.dict(exclude_unset=True)
+        update_data = payload.dict(exclude_unset=True, exclude={'test_results'})
         for field, value in update_data.items():
             setattr(strain, field, value)
 
         await db.commit()
         await db.refresh(strain)
+
+        # Удаляем старые результаты, если переданы новые
+        if payload.test_results is not None:
+            await db.execute(delete(TestResultBoolean).where(TestResultBoolean.strain_id == strain_id))
+            await db.execute(delete(TestResultNumeric).where(TestResultNumeric.strain_id == strain_id))
+            await db.execute(delete(TestResultText).where(TestResultText.strain_id == strain_id))
+            await _persist_test_results(db, strain_id, payload.test_results)
+            await db.commit()
 
         return {"detail": "Strain updated", "strain_id": strain.strain_id}
 
@@ -548,4 +559,66 @@ async def delete_strain(strain_id: int, soft: bool = Query(True, description="So
     except Exception as e:
         logging.error(f"Error deleting strain {strain_id}: {e}\n{traceback.format_exc()}")
         await db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to delete strain") 
+        raise HTTPException(status_code=500, detail="Failed to delete strain")
+
+
+# ----------------------------
+# Test result input schemas
+# ----------------------------
+
+
+class BooleanResultIn(BaseModel):
+    type: Literal['boolean'] = 'boolean'
+    test_id: int = Field(..., gt=0)
+    result_code: str = Field(..., max_length=10, description="Value code like '+', '-', '+/-'")
+
+
+class NumericResultIn(BaseModel):
+    type: Literal['numeric'] = 'numeric'
+    test_id: int = Field(..., gt=0)
+    value_type: Literal['minimum', 'maximum', 'optimal', 'single']
+    numeric_value: Decimal
+    measurement_unit: Optional[str] = None
+
+
+class TextResultIn(BaseModel):
+    type: Literal['text'] = 'text'
+    test_id: int = Field(..., gt=0)
+    text_value: str
+
+
+TestResultIn = Annotated[Union[BooleanResultIn, NumericResultIn, TextResultIn], Field(discriminator='type')]
+
+
+# ------------------------------------------------
+# Helper to persist test results
+# ------------------------------------------------
+
+
+async def _persist_test_results(db: AsyncSession, strain_id: int, results: List[TestResultIn]):
+    if not results:
+        return
+    for res in results:
+        # validate test exists and active
+        test_obj = await db.scalar(select(Test).where(Test.test_id == res.test_id, Test.is_active == True))
+        if not test_obj:
+            raise HTTPException(status_code=400, detail=f"Test ID {res.test_id} not found or inactive")
+
+        if res.type == 'boolean':
+            # find value id
+            val_obj = await db.scalar(select(TestValue).where(TestValue.test_id == res.test_id, TestValue.value_code == res.result_code))
+            if not val_obj:
+                raise HTTPException(status_code=400, detail=f"Invalid result code '{res.result_code}' for test {res.test_id}")
+            db.add(TestResultBoolean(strain_id=strain_id, test_id=res.test_id, value_id=val_obj.value_id))
+
+        elif res.type == 'numeric':
+            db.add(TestResultNumeric(
+                strain_id=strain_id,
+                test_id=res.test_id,
+                value_type=res.value_type,
+                numeric_value=res.numeric_value,
+                measurement_unit=res.measurement_unit
+            ))
+
+        elif res.type == 'text':
+            db.add(TestResultText(strain_id=strain_id, test_id=res.test_id, text_value=res.text_value)) 
