@@ -19,8 +19,8 @@ function App() {
         <Route path="/strains" element={<SpeciesBrowser />} />
         <Route path="/species" element={<Navigate to="/strains" replace />} />
         <Route path="/strains/species/:name" element={<SpeciesDetail />} />
-        <Route path="/strains/:id" element={<StrainDetail />} />
-        <Route path="/strains/:id/edit" element={<EditStrainPage />} />
+        <Route path="/strains/:strainId" element={<StrainDetail />} />
+        <Route path="/strains/:strainId/edit" element={<EditStrainPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/compare" element={<ComparePage />} />
       </Routes>
