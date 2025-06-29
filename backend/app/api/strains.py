@@ -417,17 +417,17 @@ async def get_strains_batch(
 
 class StrainBase(BaseModel):
     strain_identifier: Optional[str] = Field(None, max_length=100, description="Unique strain code, e.g. ATCC 29482")
-    scientific_name: Optional[str]
-    common_name: Optional[str]
-    description: Optional[str]
-    isolation_source: Optional[str]
-    isolation_location: Optional[str]
-    isolation_date: Optional[date]
-    source_id: Optional[int]
-    gc_content_min: Optional[Decimal]
-    gc_content_max: Optional[Decimal]
-    gc_content_optimal: Optional[Decimal]
-    notes: Optional[str]
+    scientific_name: Optional[str] = None
+    common_name: Optional[str] = None
+    description: Optional[str] = None
+    isolation_source: Optional[str] = None
+    isolation_location: Optional[str] = None
+    isolation_date: Optional[date] = None
+    source_id: Optional[int] = None
+    gc_content_min: Optional[Decimal] = None
+    gc_content_max: Optional[Decimal] = None
+    gc_content_optimal: Optional[Decimal] = None
+    notes: Optional[str] = None
     is_active: Optional[bool] = True
 
 
