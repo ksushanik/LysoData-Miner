@@ -63,9 +63,12 @@ export default function SpeciesBrowser() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Species Browser</h1>
-        <p className="text-gray-600">Browse Lysobacter species in the database</p>
+      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Species Browser</h1>
+          <p className="text-gray-600">Browse Lysobacter species in the database</p>
+        </div>
+        <Link to="/strains/new" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Новый штамм</Link>
       </div>
 
       {/* Search */}
