@@ -98,14 +98,14 @@ export const NumericTestInput: React.FC<NumericTestInputProps> = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Заголовок теста */}
+      {/* Test Header */}
       <div className="flex items-center justify-between">
         <div>
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-foreground">
             {test.test_name}
           </label>
           {test.measurement_unit && (
-            <span className="text-xs text-gray-500 ml-1">
+            <span className="text-xs text-muted-foreground ml-1">
               ({test.measurement_unit})
             </span>
           )}
@@ -113,62 +113,62 @@ export const NumericTestInput: React.FC<NumericTestInputProps> = ({
         <button
           type="button"
           onClick={clearValue}
-          className="text-xs text-gray-400 hover:text-gray-600"
-          title="Очистить значение"
+          className="text-xs text-muted-foreground hover:text-foreground"
+          title="Clear value"
         >
           ✕
         </button>
       </div>
 
-      {/* Переключатель режима */}
-      <div className="flex bg-gray-100 rounded-lg p-1">
+      {/* Mode Switcher */}
+      <div className="flex bg-muted rounded-lg p-1">
         <button
           type="button"
           onClick={() => handleModeChange('exact')}
-          className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
+          className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
             mode === 'exact'
-              ? 'bg-white text-blue-700 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Точное значение
+          Exact
         </button>
         <button
           type="button"
           onClick={() => handleModeChange('range')}
-          className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
+          className={`flex-1 py-1.5 px-3 text-sm font-medium rounded-md transition-colors ${
             mode === 'range'
-              ? 'bg-white text-blue-700 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Диапазон
+          Range
         </button>
       </div>
 
-      {/* Поле для точного значения */}
+      {/* Exact Value Input */}
       {mode === 'exact' && (
         <div className="space-y-2">
           <input
             type="number"
             value={exactValue}
             onChange={(e) => setExactValue(e.target.value)}
-            placeholder={`Введите значение (${ranges.min}-${ranges.max})`}
+            placeholder={`Enter value (${ranges.min}-${ranges.max})`}
             min={ranges.min}
             max={ranges.max}
             step={ranges.step}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-border bg-background rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
           />
           
-          {/* Быстрые кнопки для типичных значений */}
-          <div className="flex gap-2 flex-wrap">
-            <span className="text-xs text-gray-500">Быстрый выбор:</span>
+          {/* Quick Set Buttons */}
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-xs text-muted-foreground">Quick set:</span>
             {[ranges.typical[0], ranges.typical[1], (ranges.typical[0] + ranges.typical[1]) / 2].map((val) => (
               <button
                 key={val}
                 type="button"
                 onClick={() => setExactValue(val.toString())}
-                className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border text-gray-600"
+                className="px-2 py-0.5 text-xs bg-muted hover:bg-border rounded-full border-border text-muted-foreground"
               >
                 {val}{test.measurement_unit}
               </button>
@@ -177,89 +177,88 @@ export const NumericTestInput: React.FC<NumericTestInputProps> = ({
         </div>
       )}
 
-      {/* Поля для диапазона */}
+      {/* Range Inputs */}
       {mode === 'range' && (
         <div className="space-y-3">
-          {/* Поля ввода min и max */}
+          {/* Min & Max Inputs */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Минимум</label>
+              <label className="block text-xs text-muted-foreground mb-1">Min</label>
               <input
                 type="number"
                 value={minValue}
                 onChange={(e) => setMinValue(e.target.value)}
-                placeholder="Мин"
+                placeholder="Min"
                 min={ranges.min}
                 max={ranges.max}
                 step={ranges.step}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border bg-background rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Максимум</label>
+              <label className="block text-xs text-muted-foreground mb-1">Max</label>
               <input
                 type="number"
                 value={maxValue}
                 onChange={(e) => setMaxValue(e.target.value)}
-                placeholder="Макс"
+                placeholder="Max"
                 min={ranges.min}
                 max={ranges.max}
                 step={ranges.step}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border bg-background rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
               />
             </div>
           </div>
 
-          {/* Ползунок для диапазона на react-range */}
-          <div className="px-2">
+          {/* Range Slider */}
+          <div className="px-2 pt-2">
             <Range
               values={[parseFloat(minValue) || ranges.min, parseFloat(maxValue) || ranges.max]}
               step={ranges.step}
               min={ranges.min}
               max={ranges.max}
               onChange={handleRangeSliderChange}
-              renderTrack={({ props, children }: { props: any; children: React.ReactNode }) => (
+              renderTrack={({ props, children }) => (
                 <div
                   {...props}
-                  className="h-2 w-full rounded bg-gray-200"
+                  className="h-1.5 w-full rounded-full bg-muted"
                 >
-                  {children}
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{
+                      width: `${((parseFloat(maxValue) || ranges.max) - (parseFloat(minValue) || ranges.min)) / (ranges.max - ranges.min) * 100}%`,
+                      marginLeft: `${((parseFloat(minValue) || ranges.min) - ranges.min) / (ranges.max - ranges.min) * 100}%`
+                    }}
+                  />
                 </div>
               )}
-              renderThumb={({ props, index }: { props: any; index: number }) => (
+              renderThumb={({ props }) => (
                 <div
                   {...props}
-                  className={`h-4 w-4 rounded-full shadow ${index === 0 ? 'bg-blue-500' : 'bg-red-500'}`}
+                  className="h-4 w-4 rounded-full bg-white border-2 border-primary shadow"
                 />
               )}
             />
 
-            {/* Отображение значений под ползунком */}
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
+            {/* Range Labels */}
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
               <span>{ranges.min}{test.measurement_unit}</span>
-              <span className="font-medium text-gray-700">
-                {minValue && maxValue ? `${minValue} - ${maxValue} ${test.measurement_unit}` : ''}
+              <span className="font-medium text-foreground">
+                {minValue && maxValue ? `${minValue} - ${maxValue}` : ''}
               </span>
               <span>{ranges.max}{test.measurement_unit}</span>
             </div>
           </div>
 
-          {/* Быстрые кнопки для типичных диапазонов */}
-          <div className="flex gap-2 flex-wrap">
-            <span className="text-xs text-gray-500">Быстрый выбор:</span>
+          {/* Quick Range Buttons */}
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-xs text-muted-foreground">Quick set:</span>
             <button
               type="button"
               onClick={() => handleQuickSet(ranges.typical)}
-              className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 rounded border text-blue-700"
+              className="px-2 py-0.5 text-xs bg-muted hover:bg-border rounded-full border-border text-muted-foreground"
             >
-              Типичный ({ranges.typical[0]}-{ranges.typical[1]}{test.measurement_unit})
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickSet([ranges.min, ranges.max])}
-              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded border text-gray-600"
-            >
-              Полный ({ranges.min}-{ranges.max}{test.measurement_unit})
+              Typical ({ranges.typical.join('-')}{test.measurement_unit})
             </button>
           </div>
         </div>

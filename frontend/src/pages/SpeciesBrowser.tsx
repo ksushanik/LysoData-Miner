@@ -41,19 +41,19 @@ export default function SpeciesBrowser() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-lg text-gray-600">Loading species...</div>
+        <div className="text-lg text-muted-foreground">Loading species...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-600">
+      <div className="text-center text-destructive">
         <h2 className="text-xl font-semibold mb-2">Error Loading Species</h2>
         <p>{error}</p>
         <button
           onClick={fetchSpecies}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="mt-4 bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90"
         >
           Retry
         </button>
@@ -62,23 +62,28 @@ export default function SpeciesBrowser() {
   }
 
   return (
-    <div>
+    <div className="container mx-auto px-4">
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Species Browser</h1>
-          <p className="text-gray-600">Browse Lysobacter species in the database</p>
+          <h1 className="text-3xl font-bold text-foreground mb-1">Species Browser</h1>
+          <p className="text-muted-foreground">Browse all Lysobacter species in the database.</p>
         </div>
-        <Link to="/strains/new" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Новый штамм</Link>
+        <Link 
+          to="/strains/new" 
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90"
+        >
+          + Add New Strain
+        </Link>
       </div>
 
       {/* Search */}
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Search scientific name..."
+          placeholder="Search by scientific name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-border bg-background rounded-lg focus:ring-1 focus:ring-primary focus:border-primary"
         />
       </div>
 
@@ -88,13 +93,13 @@ export default function SpeciesBrowser() {
           <Link
             key={sp.scientific_name}
             to={`/strains/species/${encodeURIComponent(sp.scientific_name)}`}
-            className="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            className="block bg-white rounded-lg shadow-sm border border-border p-6 hover:shadow-md hover:border-primary/50 transition-all"
           >
-            <h3 className="text-lg font-semibold text-gray-900 italic mb-2">
+            <h3 className="text-lg font-semibold text-foreground italic mb-2">
               {sp.scientific_name}
             </h3>
-            <p className="text-sm text-gray-600">
-              {sp.strain_count} strain{sp.strain_count !== 1 ? 's' : ''}
+            <p className="text-sm text-muted-foreground">
+              {sp.strain_count} strain{sp.strain_count !== 1 ? 's' : ''} available
             </p>
           </Link>
         ))}

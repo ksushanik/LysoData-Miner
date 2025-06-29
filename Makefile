@@ -134,8 +134,8 @@ health: ## Check health of all services
 # Database management
 db-backup: ## Create database backup
 	@echo "$(BLUE)💾 Creating database backup...$(RESET)"
-	docker-compose exec postgres pg_dump -U lysobacter_user lysobacter_db > backup_$(shell date +%Y%m%d_%H%M%S).sql
-	@echo "$(GREEN)✅ Database backup created$(RESET)"
+	docker-compose exec postgres pg_dump -U lysobacter_user lysobacter_db | gzip > backups/backup_$(shell date +%Y%m%d_%H%M%S).sql.gz
+	@echo "$(GREEN)✅ Database backup created in backups/ folder and compressed.$(RESET)"
 
 db-restore: ## Restore database from backup (requires BACKUP_FILE variable)
 	@echo "$(BLUE)🔄 Restoring database from backup...$(RESET)"

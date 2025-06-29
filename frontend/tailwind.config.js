@@ -7,29 +7,37 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Custom Brand Palette
+        'brand-primary': {
+          light: '#60a5fa', // blue-400
+          DEFAULT: '#3b82f6', // blue-500
+          dark: '#2563eb', // blue-600
+        },
+        'brand-neutral': {
+          lightest: '#f8fafc', // slate-50
+          light: '#f1f5f9',    // slate-100
+          DEFAULT: '#e2e8f0',   // slate-200
+          dark: '#64748b',     // slate-500
+          darkest: '#1e293b',  // slate-800
+        },
+        'brand-success': '#22c55e', // green-500
+        'brand-danger': '#ef4444',  // red-500
+
+        // Standard Semantic Palette (for compatibility)
+        border: 'var(--brand-neutral, #e2e8f0)',
+        background: 'var(--brand-neutral-lightest, #f8fafc)',
+        foreground: 'var(--brand-neutral-darkest, #1e293b)',
         primary: {
-          50: '#eff6ff',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
+          DEFAULT: 'var(--brand-primary, #3b82f6)',
+          foreground: 'var(--brand-neutral-lightest, #f8fafc)',
         },
-        secondary: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          500: '#6b7280',
-          700: '#374151',
-          900: '#111827',
+        muted: {
+          DEFAULT: 'var(--brand-neutral-light, #f1f5f9)',
+          foreground: 'var(--brand-neutral-dark, #64748b)',
         },
-        background: '#ffffff',
-        foreground: '#0f172a',
-        border: '#e2e8f0',
-        muted: '#f1f5f9',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['Fira Code', 'monospace'],
+        sans: ['Inter', 'sans-serif'],
       },
     },
   },

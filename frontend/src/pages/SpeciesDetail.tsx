@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { CompareContext } from '../context/CompareContext'
 
 interface Strain {
   strain_id: number
@@ -30,6 +31,7 @@ export default function SpeciesDetail() {
   const [strains, setStrains] = useState<Strain[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { selected, toggle } = useContext(CompareContext)
 
   useEffect(() => {
     const fetchStrains = async () => {
@@ -76,37 +78,48 @@ export default function SpeciesDetail() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold italic text-gray-900">{decodedName}</h1>
-        <Link to="/strains" className="text-blue-600 hover:text-blue-800">← Back to species</Link>
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-4xl font-bold text-foreground">{decodedName}</h1>
+        <Link to="/strains" className="text-sm font-medium text-primary hover:text-primary-dark transition-colors flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Back to species
+        </Link>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {strains.map((strain) => (
-          <div key={strain.strain_id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {strain.strain_identifier}
-              </h3>
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                strain.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-              }`}>
-                {strain.is_active ? 'Active' : 'Inactive'}
-              </span>
+          <div key={strain.strain_id} className="bg-white rounded-xl shadow-md border border-border p-6 flex flex-col transition-all duration-300 hover:shadow-lg hover:border-primary/50">
+            <div className="flex-grow">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-xl font-bold text-foreground">
+                  {strain.strain_identifier}
+                </h3>
+                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                  strain.is_active ? 'bg-green-100 text-green-800' : 'bg-muted text-muted-foreground'
+                }`}>
+                  {strain.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+
+              {strain.common_name && (
+                <p className="text-sm text-muted-foreground mb-2">Common name: {strain.common_name}</p>
+              )}
+
+              {strain.description && (
+                <p className="text-sm text-muted-foreground line-clamp-3">{strain.description}</p>
+              )}
             </div>
 
-            {strain.common_name && (
-              <p className="text-sm text-gray-600 mb-2">Common name: {strain.common_name}</p>
-            )}
-
-            {strain.description && (
-              <p className="text-sm text-gray-600 line-clamp-3">{strain.description}</p>
-            )}
-
-            <div className="mt-4 pt-3 border-t border-gray-100">
-              <Link to={`/strains/${strain.strain_id}`} state={{ scientificName: decodedName }} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+            <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
+              <Link to={`/strains/${strain.strain_id}`} state={{ scientificName: decodedName }} className="text-primary hover:text-primary-dark text-sm font-semibold transition-colors">
                 View Details →
               </Link>
+              <button
+                onClick={() => toggle(strain.strain_id)}
+                className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+              >
+                {selected.includes(strain.strain_id) ? '− Убрать' : '+ В сравнение'}
+              </button>
             </div>
           </div>
         ))}

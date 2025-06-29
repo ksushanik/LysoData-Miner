@@ -14,17 +14,18 @@ export const BooleanTestInput: React.FC<BooleanTestInputProps> = ({
   onChange,
   className = ""
 }) => {
-  const options = [
-    { value: '+', label: 'Положительный', color: 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' },
-    { value: '-', label: 'Отрицательный', color: 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200' },
-    { value: '+/-', label: 'Переменный', color: 'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200' },
-    { value: 'n.d.', label: 'Нет данных', color: 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200' }
-  ] as const;
+  type OptionValue = '+' | '-' | '+/-' | 'n.d.';
+  
+  const options: { value: OptionValue; label: string; style: string; selectedStyle: string }[] = [
+    { value: '+', label: 'Positive', style: 'border-green-500/30 hover:border-green-500/80', selectedStyle: 'bg-green-500/10 border-green-500/80' },
+    { value: '-', label: 'Negative', style: 'border-red-500/30 hover:border-red-500/80', selectedStyle: 'bg-red-500/10 border-red-500/80' },
+    { value: '+/-', label: 'Variable', style: 'border-yellow-500/30 hover:border-yellow-500/80', selectedStyle: 'bg-yellow-500/10 border-yellow-500/80' },
+    { value: 'n.d.', label: 'Not Detected', style: 'border-border hover:border-muted-foreground/50', selectedStyle: 'bg-muted border-muted-foreground/50' }
+  ];
 
-  const handleValueChange = (newValue: '+' | '-' | '+/-' | 'n.d.') => {
+  const handleValueChange = (newValue: OptionValue) => {
     if (value?.value === newValue) {
-      // Если значение уже выбрано, снимаем выбор
-      onChange(undefined);
+      onChange(undefined); // Deselect if already selected
     } else {
       onChange({ value: newValue });
     }
@@ -36,14 +37,14 @@ export const BooleanTestInput: React.FC<BooleanTestInputProps> = ({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* Заголовок теста */}
+      {/* Test Header */}
       <div className="flex items-center justify-between">
         <div>
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-foreground">
             {test.test_name}
           </label>
           {test.measurement_unit && (
-            <span className="text-xs text-gray-500 ml-1">
+            <span className="text-xs text-muted-foreground ml-1">
               ({test.measurement_unit})
             </span>
           )}
@@ -51,14 +52,14 @@ export const BooleanTestInput: React.FC<BooleanTestInputProps> = ({
         <button
           type="button"
           onClick={clearValue}
-          className="text-xs text-gray-400 hover:text-gray-600"
-          title="Очистить значение"
+          className="text-xs text-muted-foreground hover:text-foreground"
+          title="Clear value"
         >
           ✕
         </button>
       </div>
 
-      {/* Кнопки выбора значений */}
+      {/* Value Selection Buttons */}
       <div className="grid grid-cols-2 gap-2">
         {options.map((option) => (
           <button
@@ -66,37 +67,28 @@ export const BooleanTestInput: React.FC<BooleanTestInputProps> = ({
             type="button"
             onClick={() => handleValueChange(option.value)}
             className={`
-              py-3 px-4 rounded-lg border-2 transition-all duration-200 text-sm font-medium
+              py-2 px-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium
               ${value?.value === option.value 
-                ? `${option.color} ring-2 ring-offset-1 ring-blue-500` 
-                : `${option.color} opacity-60`
+                ? `${option.selectedStyle} ring-2 ring-offset-1 ring-primary` 
+                : `${option.style}`
               }
             `}
           >
-            <div className="flex items-center justify-center space-x-2">
-              <span className="text-lg font-bold">
-                {option.value}
-              </span>
-              <span className="text-xs">
+            <div className="flex flex-col items-center justify-center space-y-1">
+              <span className="font-bold text-foreground">
                 {option.label}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                ({option.value})
               </span>
             </div>
           </button>
         ))}
       </div>
 
-      {/* Описание выбранного значения */}
-      {value && (
-        <div className="text-center">
-          <span className="inline-block px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-            Выбрано: {options.find(opt => opt.value === value.value)?.label}
-          </span>
-        </div>
-      )}
-
-      {/* Описание теста */}
+      {/* Test Description */}
       {test.description && (
-        <p className="text-xs text-gray-500 italic">
+        <p className="text-xs text-muted-foreground italic pt-1">
           {test.description}
         </p>
       )}
@@ -104,4 +96,4 @@ export const BooleanTestInput: React.FC<BooleanTestInputProps> = ({
   );
 };
 
-export default BooleanTestInput; 
+export default BooleanTestInput;

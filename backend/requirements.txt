@@ -18,4 +18,12 @@ python-multipart==0.0.6
 
 # Optional utilities
 python-json-logger==2.0.7
-python-dotenv==1.0.0 
+python-dotenv==1.0.0
+
+# Data processing and analysis (from root requirements.txt)
+psycopg2-binary>=2.9.0
+pandas>=1.5.0
+openpyxl>=3.0.0
+xlsxwriter>=3.0.0
+PyYAML>=6.0
+python-dateutil>=2.8.0 

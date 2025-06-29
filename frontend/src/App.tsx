@@ -21,9 +21,7 @@ function App() {
           <Route path="/strains/:strainId" element={<StrainDetail />} />
           <Route path="/strains/new" element={<CreateStrainPage />} />
           <Route path="/strains/:strainId/edit" element={<EditStrainPage />} />
-          <Route path="/identify" element={<Navigate to="/" replace />} />
           <Route path="/about" element={<About />} />
-          <Route path="/identification" element={<Identification />} />
           <Route path="/compare" element={<ComparePage />} />
         </Routes>
       </Layout>
