@@ -19,7 +19,7 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.database.connection import engine, get_database_status
-from app.api import strains, tests, identification, health
+from app.api import strains, tests, identification, health, stats
 
 
 @asynccontextmanager
@@ -86,10 +86,11 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(health.router, prefix="/api", tags=["Health"])
+app.include_router(health.router, prefix="/api", tags=["System Health"])
 app.include_router(strains.router, prefix="/api", tags=["Strains"])
 app.include_router(tests.router, prefix="/api", tags=["Tests"])
 app.include_router(identification.router, prefix="/api", tags=["Identification"])
+app.include_router(stats.router, prefix="/api", tags=["Statistics"])
 
 
 @app.get("/", summary="Root endpoint", tags=["Root"])
@@ -121,7 +122,8 @@ async def api_info():
             "health": "/api/health/ - System health and database status",
             "strains": "/api/strains/ - Strain management and browsing",
             "tests": "/api/tests/ - Test categories and definitions", 
-            "identification": "/api/identification/ - Strain identification by tests"
+            "identification": "/api/identification/ - Strain identification by tests",
+            "stats": "/api/stats/ - Statistics and analysis"
         },
         "database": "PostgreSQL with lysobacter schema",
         "documentation": {

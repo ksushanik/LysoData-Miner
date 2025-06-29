@@ -1,6 +1,7 @@
 import { StrainData, TestResult } from '../types';
 import type { TestCategory, Test } from '../types';
 import { StrainFormValues } from '../components/StrainForm'
+import api from '../services/api'
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -54,20 +55,8 @@ export const createStrain = async (data: StrainFormValues) => {
   return response.json();
 };
 
-export const updateStrain = async (id: number, data: StrainFormValues) => {
-  const response = await fetch(`${API_BASE_URL}/strains/${id}/update/`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to update strain');
-  }
-  return response.json();
-};
+export const updateStrain = (strainId: number, data: StrainPayload) =>
+  api.patch(`/strains/${strainId}/update/`, data).then((res) => res.data)
 
 export const deleteStrain = async (id: number, soft: boolean = true) => {
   const res = await fetch(`${API_BASE_URL}/strains/${id}?soft=${soft}`, {
@@ -81,4 +70,10 @@ export const fetchTestCategories = async (includeTests: boolean = true): Promise
   if (!res.ok) throw new Error(await res.text())
   const data = await res.json()
   return data.categories as TestCategoryWithTests[]
+}
+
+export const getDashboardStats = async () => {
+  const res = await fetch(`${API_BASE_URL}/stats/`)
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
 } 
