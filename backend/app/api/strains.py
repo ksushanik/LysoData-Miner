@@ -24,6 +24,7 @@ router = APIRouter()
 
 
 @router.get("/strains/", summary="List Strains")
+@router.get("/strains", include_in_schema=False)
 async def list_strains(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=settings.MAX_RESULTS_PER_PAGE, description="Number of records to return"),
