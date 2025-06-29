@@ -2,7 +2,7 @@
 # code: unique machine code (test_code)
 # label: human-readable name (ru)
 # type: numeric | qualitative
-# category: morphological | physiological | biochemical_enzymes | biochemical_breakdown | biochemical_utilization | other_biochemical
+# category: morphological | physiological | biochemical_enzymes | biochemical_breakdown | biochemical_utilization | biochemical_other
 # unit: measurement unit for numeric tests (optional)
 
 - code: spore_formation
@@ -202,13 +202,13 @@
 - code: cellulase_activity
   label: Целлюлазная активность
   type: boolean
-  category: other_biochemical
+  category: biochemical_other
 - code: phosphate_solubilization
   label: Солюбилизация фосфатов
   type: boolean
-  category: other_biochemical
+  category: biochemical_other
 - code: gc_content
   label: GC-состав
   type: numeric
-  category: other_biochemical
+  category: biochemical_other
   unit: "%" 
