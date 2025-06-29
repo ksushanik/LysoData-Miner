@@ -11,7 +11,7 @@ INSERT INTO lysobacter.test_categories (category_name, description, sort_order) 
 ('biochemical_enzymes', 'Biochemical Properties - Enzymes', 3),
 ('biochemical_breakdown', 'Biochemical Properties - Sugar and Polysaccharide Breakdown', 4),
 ('biochemical_utilization', 'Biochemical Properties - Sugar Utilization', 5),
-('biochemical_other', 'Other Biochemical Characteristics', 6);
+('other_biochemical', 'Other Biochemical Characteristics', 6);
 
 -- ========================================
 -- MORPHOLOGICAL TESTS
@@ -103,7 +103,7 @@ INSERT INTO lysobacter.tests (category_id, test_name, test_code, test_type, desc
 
 -- GC Content test (numeric with measurement_unit)
 INSERT INTO lysobacter.tests (category_id, test_name, test_code, test_type, description, measurement_unit, sort_order) VALUES
-((SELECT category_id FROM lysobacter.test_categories WHERE category_name = 'biochemical_other'), 'GC Content', 'gc_content', 'numeric', 'GC content percentage', '%', 1);
+((SELECT category_id FROM lysobacter.test_categories WHERE category_name = 'other_biochemical'), 'GC Content', 'gc_content', 'numeric', 'GC content percentage', '%', 1);
 
 -- ========================================
 -- TEST VALUES FOR BOOLEAN TESTS
