@@ -30,6 +30,7 @@ async def list_strains(
     search: Optional[str] = Query(None, description="Search in strain identifier, scientific name, or description"),
     source_id: Optional[int] = Query(None, description="Filter by data source ID"),
     active_only: Optional[bool] = Query(True, description="Return only active strains"),
+    scientific_name: Optional[str] = Query(None, description="Filter by scientific name"),
     db: AsyncSession = Depends(get_database_session)
 ):
     """Get list of bacterial strains with optional filtering and search"""
@@ -48,6 +49,9 @@ async def list_strains(
         
         if source_id:
             filters.append(Strain.source_id == source_id)
+        
+        if scientific_name:
+            filters.append(Strain.scientific_name == scientific_name)
         
         # Apply search
         if search:
@@ -300,4 +304,36 @@ async def search_strains(
         
     except Exception as e:
         logging.error(f"Error during advanced search: {e}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="An error occurred during search.") 
+        raise HTTPException(status_code=500, detail="An error occurred during search.")
+
+
+@router.get("/strains/species", summary="List unique scientific names")
+async def list_species(
+    active_only: Optional[bool] = Query(True, description="Return only active strains"),
+    db: AsyncSession = Depends(get_database_session)
+):
+    """Return list of distinct scientific names with strain counts."""
+    try:
+        filters = []
+        if active_only:
+            filters.append(Strain.is_active == True)
+
+        stmt = select(
+            Strain.scientific_name,
+            func.count(Strain.strain_id).label("strain_count")
+        )
+        if filters:
+            stmt = stmt.where(and_(*filters))
+        stmt = stmt.group_by(Strain.scientific_name).order_by(Strain.scientific_name)
+
+        result = await db.execute(stmt)
+        species_rows = result.all()
+
+        species_list = [
+            {"scientific_name": row.scientific_name, "strain_count": row.strain_count}
+            for row in species_rows
+        ]
+        return {"species": species_list, "total": len(species_list)}
+    except Exception as e:
+        logging.error(f"Error fetching species list: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve species list") 
