@@ -440,10 +440,7 @@ class StrainUpdate(StrainBase):
     test_results: Optional[List[TestResultIn]] = None
 
 
-# ----------------------------
-# Test result input schemas (must be defined before StrainCreate uses them)
-# ----------------------------
-
+# === Test result input schemas ===
 
 class BooleanResultIn(BaseModel):
     type: Literal['boolean'] = 'boolean'
