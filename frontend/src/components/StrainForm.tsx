@@ -13,13 +13,13 @@ import TextTestInput from './TextTestInput'
 // ------------------
 const schema = z.object({
   strain_identifier: z.string().min(2, 'Обязательное поле'),
-  scientific_name: z.string().optional(),
-  common_name: z.string().optional(),
-  description: z.string().optional(),
-  isolation_source: z.string().optional(),
-  isolation_location: z.string().optional(),
-  isolation_date: z.string().optional(),
-  notes: z.string().optional(),
+  scientific_name: z.string().optional().nullable(),
+  common_name: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  isolation_source: z.string().optional().nullable(),
+  isolation_location: z.string().optional().nullable(),
+  isolation_date: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
   is_active: z.boolean().optional()
 })
 

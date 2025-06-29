@@ -1,5 +1,6 @@
-import { Strain } from '../types';
+import { StrainData, TestResult } from '../types';
 import type { TestCategory, Test } from '../types';
+import { StrainFormValues } from '../components/StrainForm'
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -24,33 +25,48 @@ export interface TestCategoryWithTests extends TestCategory {
   test_count?: number
 }
 
-export const fetchStrainDetails = async (strainId: string): Promise<Strain> => {
+export interface StrainDetailsResponse {
+  strain: StrainData;
+  test_results: TestResult[];
+}
+
+export const fetchStrainDetails = async (strainId: string): Promise<StrainDetailsResponse> => {
     const response = await fetch(`${API_BASE_URL}/strains/${strainId}`);
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const data: Strain = await response.json();
+    const data: StrainDetailsResponse = await response.json();
     return data;
 };
 
-export const createStrain = async (payload: StrainPayload): Promise<number> => {
-  const res = await fetch(`${API_BASE_URL}/strains/`, {
+export const createStrain = async (data: StrainFormValues) => {
+  const response = await fetch(`${API_BASE_URL}/strains/create/`, {
     method: 'POST',
-    headers: headersJSON,
-    body: JSON.stringify(payload)
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error(await res.text());
-  const data = await res.json();
-  return data.strain_id as number;
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to create strain');
+  }
+  return response.json();
 };
 
-export const updateStrain = async (id: number, payload: Partial<StrainPayload>) => {
-  const res = await fetch(`${API_BASE_URL}/strains/${id}`, {
-    method: 'PUT',
-    headers: headersJSON,
-    body: JSON.stringify(payload)
+export const updateStrain = async (id: number, data: StrainFormValues) => {
+  const response = await fetch(`${API_BASE_URL}/strains/${id}/update/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to update strain');
+  }
+  return response.json();
 };
 
 export const deleteStrain = async (id: number, soft: boolean = true) => {

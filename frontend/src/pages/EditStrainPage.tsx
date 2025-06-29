@@ -29,11 +29,12 @@ export default function EditStrainPage() {
   }, [strainId])
 
   const handleSubmit = async (values: StrainFormValues) => {
+    if (!strainId) return;
     try {
       await updateStrain(Number(strainId), values)
       navigate(`/strains/${strainId}`)
-    } catch (e) {
-      alert(`Ошибка сохранения: ${e}`)
+    } catch (e: any) {
+      alert(`Ошибка сохранения: ${e.message || 'Неизвестная ошибка'}`)
     }
   }
 

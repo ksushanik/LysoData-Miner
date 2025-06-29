@@ -476,7 +476,9 @@ StrainUpdate.model_rebuild()
 
 @router.post("/strains/", status_code=201, summary="Create new strain")
 async def create_strain(payload: StrainCreate, db: AsyncSession = Depends(get_database_session)):
-    """Create a new bacterial strain"""
+    """
+    Creates a new strain along with its associated test results.
+    """
     try:
         # Check uniqueness
         dup_check = await db.execute(select(Strain).where(Strain.strain_identifier == payload.strain_identifier))
@@ -520,9 +522,12 @@ async def create_strain(payload: StrainCreate, db: AsyncSession = Depends(get_da
 # ------------------------------------------------
 
 
-@router.put("/strains/{strain_id}", summary="Update strain")
+@router.patch("/strains/{strain_id}/update/", summary="Update strain")
 async def update_strain(strain_id: int, payload: StrainUpdate, db: AsyncSession = Depends(get_database_session)):
-    """Update existing strain"""
+    """
+    Updates an existing strain's information and its test results.
+    This method uses PATCH and allows for partial updates.
+    """
     try:
         result = await db.execute(select(Strain).where(Strain.strain_id == strain_id))
         strain = result.scalar_one_or_none()
@@ -539,25 +544,30 @@ async def update_strain(strain_id: int, payload: StrainUpdate, db: AsyncSession 
         for field, value in update_data.items():
             setattr(strain, field, value)
 
-        await db.commit()
-        await db.refresh(strain)
-
-        # Удаляем старые результаты, если переданы новые
+        # Handle test results update
         if payload.test_results is not None:
+            # First, clear existing results for this strain
             await db.execute(delete(TestResultBoolean).where(TestResultBoolean.strain_id == strain_id))
             await db.execute(delete(TestResultNumeric).where(TestResultNumeric.strain_id == strain_id))
             await db.execute(delete(TestResultText).where(TestResultText.strain_id == strain_id))
-            await _persist_test_results(db, strain_id, payload.test_results)
-            await db.commit()
+            # Then, persist new results
+            if payload.test_results:
+                 await _persist_test_results(db, strain_id, payload.test_results)
 
-        return {"detail": "Strain updated", "strain_id": strain.strain_id}
+        await db.commit()
+        
+        return {"message": f"Strain {strain_id} updated successfully"}
 
     except HTTPException:
+        await db.rollback()
         raise
     except Exception as e:
-        logging.error(f"Error updating strain {strain_id}: {e}\n{traceback.format_exc()}")
         await db.rollback()
-        raise HTTPException(status_code=500, detail="Failed to update strain")
+        logging.error(f"Error updating strain {strain_id}: {e}\n{traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred: {str(e)}"
+        )
 
 
 # ------------------------------------------------
