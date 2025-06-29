@@ -1,130 +1,195 @@
-# Technical Context - Lysobacter Database
+# Technical Context - LysoData-Miner
 
 ## Технологический стек
 
-### Основная СУБД
-- **PostgreSQL 12+** - основная система управления базами данных
-- **psql** - клиент командной строки для PostgreSQL
-- **pg_dump/pg_restore** - инструменты резервного копирования
+### Backend
+- **FastAPI** - современный async веб-фреймворк для Python
+- **SQLAlchemy** (async) - ORM для работы с PostgreSQL
+- **Pydantic** - валидация данных и сериализация
+- **Uvicorn** - ASGI сервер для production
+- **psycopg2-binary** - PostgreSQL драйвер
 
-### Языки программирования
-- **SQL** - создание схемы, представлений, функций и процедур
-- **Python 3.8+** - скрипты импорта данных и автоматизации
-- **Bash** - скрипты установки и настройки системы
+### Frontend
+- **React 18** - основная библиотека UI
+- **TypeScript** - типизированный JavaScript
+- **Vite** - быстрый build tool и dev server
+- **Tailwind CSS** - utility-first CSS фреймворк
+- **React Hook Form** - управление формами
+- **Zod** - валидация схем TypeScript
+- **React Router** - клиентский роутинг
 
-### Python библиотеки
-- **psycopg2-binary** - PostgreSQL адаптер для Python
-- **pandas** - обработка и анализ данных
-- **openpyxl** - работа с Excel файлами
-- **xlsxwriter** - создание Excel файлов
-- **python-dateutil** - парсинг дат в различных форматах
+### База данных
+- **PostgreSQL 12+** - основная СУБД
+- **Нормализованная схема (3NF)** - 24 таблицы
+- **Индексы** - оптимизация для поиска и аналитики
+- **Функции и представления** - бизнес-логика на уровне БД
 
-### Инструменты автоматизации
-- **Make** - автоматизация сборки и управления проектом
-- **Git** - система контроля версий
-- **Shell scripts** - автоматизация операций развертывания
+### Развертывание и CI/CD
+- **Docker** - контейнеризация приложений
+- **Docker Hub** - публичный registry (gimmyhat/lysodata-*)
+- **SSH** - безопасное подключение к production серверу
+- **Bash scripts** - автоматизация развертывания
+- **Python scripts** - webhook сервер
+- **Makefile** - управление командами
 
-## Архитектура базы данных
+## Архитектура системы
 
-### Схема: lysobacter
-Все объекты базы данных находятся в отдельной схеме `lysobacter` для изоляции от системных объектов.
-
-### Основные компоненты
-
-#### 1. Справочные таблицы (Reference Tables)
-```sql
--- Категории тестов
-test_categories (category_id, category_name, description, sort_order)
-
--- Определения тестов  
-tests (test_id, category_id, test_name, test_code, test_type, description, measurement_unit)
-
--- Возможные значения для булевых тестов
-test_values (value_id, test_id, value_code, value_name, description)
-
--- Источники данных
-data_sources (source_id, source_name, source_type, contact_info)
-
--- Номера коллекций
-collection_numbers (collection_number_id, collection_code, collection_number, collection_name)
+### Структура проекта (после реорганизации)
+```
+lysobacters/
+├── backend/                     # FastAPI приложение
+│   ├── app/
+│   │   ├── api/                # REST API эндпоинты
+│   │   │   ├── strains.py      # CRUD штаммов
+│   │   │   ├── tests.py        # Управление тестами
+│   │   │   ├── identification.py # Алгоритм идентификации
+│   │   │   ├── stats.py        # Статистика
+│   │   │   └── health.py       # Health checks
+│   │   ├── models/             # SQLAlchemy модели
+│   │   │   ├── strain.py       # Модель штамма
+│   │   │   ├── test.py         # Модель теста
+│   │   │   ├── result.py       # Результаты тестов
+│   │   │   └── audit.py        # Аудит изменений
+│   │   ├── core/
+│   │   │   └── config.py       # Конфигурация приложения
+│   │   └── database/
+│   │       └── connection.py   # Подключение к БД
+│   ├── database/               # Схема БД и скрипты
+│   └── Dockerfile              # Multi-stage build
+│
+├── frontend/                    # React SPA
+│   ├── src/
+│   │   ├── components/         # Переиспользуемые компоненты
+│   │   │   ├── IdentificationForm.tsx
+│   │   │   ├── StrainCard.tsx
+│   │   │   ├── ComparisonTable.tsx
+│   │   │   └── SpeciesDetail.tsx
+│   │   ├── pages/              # Страницы приложения
+│   │   │   ├── HomePage.tsx
+│   │   │   ├── IdentificationPage.tsx
+│   │   │   ├── StrainsPage.tsx
+│   │   │   └── SpeciesBrowser.tsx
+│   │   ├── hooks/              # Custom React hooks
+│   │   ├── types/              # TypeScript типы
+│   │   └── App.tsx
+│   └── Dockerfile              # Optimized build
+│
+├── config/                      # Конфигурационные файлы
+│   ├── docker/                 # Docker compose файлы
+│   │   ├── docker-compose.yml  # Development
+│   │   ├── docker-compose.production.yml
+│   │   └── docker-compose.hub.yml
+│   ├── environment/            # Environment шаблоны
+│   └── makefiles/              # Специализированные Makefile
+│
+├── scripts/                     # Автоматизация
+│   ├── deployment/             # CI/CD скрипты
+│   │   ├── deploy_to_4feb.sh   # Основной скрипт развертывания
+│   │   ├── watch_and_deploy.sh # Автоматический мониторинг
+│   │   └── webhook_server.py   # HTTP API развертывания
+│   ├── database/               # Утилиты БД
+│   └── utilities/              # Общие утилиты
+│
+└── docs/                        # Документация
+    ├── deployment/             # Руководства развертывания
+    └── database/               # Документация БД
 ```
 
-#### 2. Основные сущности (Core Entities)
-```sql
--- Штаммы бактерий
-strains (strain_id, strain_identifier, scientific_name, common_name, description, 
-         isolation_source, isolation_location, isolation_date, source_id, notes)
+## API Architecture
 
--- Связи штаммов с коллекциями (M:N)
-strain_collections (strain_id, collection_number_id, is_primary, notes)
+### REST Endpoints
+```
+GET    /api/health/             # Health check
+GET    /api/strains             # Список штаммов (с пагинацией)
+GET    /api/strains/{id}        # Детали штамма
+POST   /api/strains             # Создание штамма
+PUT    /api/strains/{id}        # Обновление штамма
+DELETE /api/strains/{id}        # Удаление штамма
+POST   /api/strains/batch       # Получение нескольких штаммов
+GET    /api/tests               # Список тестов
+POST   /api/identification      # Идентификация штамма
+GET    /api/stats               # Статистика системы
 ```
 
-#### 3. Результаты тестов (Test Results)
-```sql
--- Булевы результаты (+, -, +/-, н.д.)
-test_results_boolean (result_id, strain_id, test_id, value_id, notes, confidence_level, tested_date)
+### Data Models (Pydantic)
+```python
+# Основные модели
+class StrainBase(BaseModel):
+    strain_identifier: str
+    scientific_name: str
+    common_name: Optional[str]
+    description: Optional[str]
 
--- Числовые результаты (температура, pH и т.д.)
-test_results_numeric (result_id, strain_id, test_id, value_type, numeric_value, 
-                      measurement_unit, notes, confidence_level, tested_date)
+class TestResult(BaseModel):
+    test_id: int
+    value: Union[str, float, bool]
+    confidence_level: str
 
--- Текстовые результаты (свободная форма)
-test_results_text (result_id, strain_id, test_id, text_value, notes, confidence_level, tested_date)
+class IdentificationRequest(BaseModel):
+    test_results: List[TestResult]
+    tolerance: int = 3
 ```
 
-#### 4. Аудит и история (Audit Trail)
+## Database Schema
+
+### Основные таблицы
 ```sql
--- Журнал изменений
-audit_log (log_id, table_name, record_id, operation, old_values, new_values, changed_by, changed_at)
+-- Штаммы
+strains (
+    strain_id SERIAL PRIMARY KEY,
+    strain_identifier VARCHAR UNIQUE,
+    scientific_name VARCHAR,
+    common_name VARCHAR,
+    description TEXT,
+    is_duplicate BOOLEAN DEFAULT FALSE,
+    master_strain_id INTEGER REFERENCES strains(strain_id),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+)
+
+-- Тесты
+tests (
+    test_id SERIAL PRIMARY KEY,
+    category_id INTEGER,
+    test_name VARCHAR,
+    test_code VARCHAR UNIQUE,
+    test_type VARCHAR CHECK (test_type IN ('boolean', 'numeric', 'text'))
+)
+
+-- Результаты тестов (булевы)
+test_results_boolean (
+    result_id SERIAL PRIMARY KEY,
+    strain_id INTEGER REFERENCES strains(strain_id),
+    test_id INTEGER REFERENCES tests(test_id),
+    value_id INTEGER,
+    confidence_level VARCHAR
+)
+
+-- Результаты тестов (числовые)
+test_results_numeric (
+    result_id SERIAL PRIMARY KEY,
+    strain_id INTEGER REFERENCES strains(strain_id),
+    test_id INTEGER REFERENCES tests(test_id),
+    value_type VARCHAR,
+    numeric_value DECIMAL,
+    measurement_unit VARCHAR
+)
 ```
 
-### Типы данных
-
-#### Значения булевых тестов
-- `+` (Positive) - положительный результат
-- `-` (Negative) - отрицательный результат  
-- `+/-` (Intermediate) - промежуточный/переменный результат
-- `n.d.` (No Data) - данные отсутствуют
-
-#### Типы числовых значений  
-- `minimum` - минимальное значение диапазона
-- `maximum` - максимальное значение диапазона
-- `optimal` - оптимальное значение
-- `single` - единичное измерение
-
-#### Уровни достоверности
-- `high` - высокая достоверность (экспериментальные данные)
-- `medium` - средняя достоверность (некоторая неопределенность)
-- `low` - низкая достоверность (литературные данные)
-
-## Индексы и производительность
-
-### Первичные индексы
-- Автоматические индексы на первичные ключи
-- Автоматические индексы на внешние ключи
-- Уникальные индексы на альтернативные ключи
-
-### Производительные индексы
+### Индексы для производительности
 ```sql
 -- Поиск штаммов
-CREATE INDEX idx_strains_identifier ON lysobacter.strains(strain_identifier);
-CREATE INDEX idx_strains_active ON lysobacter.strains(is_active);
-
--- Поиск по тестам
-CREATE INDEX idx_tests_category ON lysobacter.tests(category_id);
-CREATE INDEX idx_tests_type ON lysobacter.tests(test_type);
-CREATE INDEX idx_tests_code ON lysobacter.tests(test_code);
+CREATE INDEX idx_strains_identifier ON strains(strain_identifier);
+CREATE INDEX idx_strains_duplicate ON strains(is_duplicate);
+CREATE INDEX idx_strains_master ON strains(master_strain_id);
 
 -- Результаты тестов
-CREATE INDEX idx_results_boolean_strain ON lysobacter.test_results_boolean(strain_id);
-CREATE INDEX idx_results_boolean_test ON lysobacter.test_results_boolean(test_id);
-CREATE INDEX idx_results_numeric_strain ON lysobacter.test_results_numeric(strain_id);
-CREATE INDEX idx_results_numeric_test ON lysobacter.test_results_numeric(test_id);
-```
+CREATE INDEX idx_results_boolean_strain ON test_results_boolean(strain_id);
+CREATE INDEX idx_results_boolean_test ON test_results_boolean(test_id);
+CREATE INDEX idx_results_numeric_strain ON test_results_numeric(strain_id);
 
-### Полнотекстовый поиск
-```sql
-CREATE INDEX idx_strains_text_search ON lysobacter.strains USING gin(
+-- Полнотекстовый поиск
+CREATE INDEX idx_strains_text_search ON strains USING gin(
     to_tsvector('english', 
         coalesce(strain_identifier, '') || ' ' || 
         coalesce(scientific_name, '') || ' ' || 
@@ -133,141 +198,198 @@ CREATE INDEX idx_strains_text_search ON lysobacter.strains USING gin(
 );
 ```
 
-## Представления (Views)
+## CI/CD Architecture
 
-### Основные представления
-- **v_strains_complete** - полная информация о штаммах с номерами коллекций
-- **v_test_results_summary** - объединенный вид всех результатов тестов
-- **v_category_statistics** - статистика по категориям тестов
-- **v_test_completion** - процент завершенности тестов
-- **v_strain_completeness** - полнота данных по штаммам
-
-## Функции базы данных
-
-### Поисковые функции
-```sql
--- Поиск с настраиваемой погрешностью
-search_strains_with_tolerance(criteria JSONB, tolerance INTEGER)
-
--- Получение профиля тестов штамма
-get_strain_test_profile(strain_id INTEGER)
-```
-
-### Функции валидации
-```sql
--- Проверка целостности данных
-validate_strain_data()
-```
-
-### Функции импорта
-```sql  
--- Массовый импорт результатов тестов
-bulk_import_strain_results(strain_identifier VARCHAR, test_results JSONB)
-```
-
-## Автоматизация и скрипты
-
-### Bash скрипты
-- **setup_database.sh** - полная установка и настройка БД
-- Поддержка параметров командной строки (--help, --verify, --clean)
-- Автоматическая проверка зависимостей
-- Цветной вывод и логирование
-
-### Python скрипты
-- **import_excel.py** - импорт данных из Excel файлов
-- Поддержка различных форматов Excel
-- Валидация данных при импорте
-- Генерация шаблонов для импорта
-- Подробное логирование операций
-
-### Makefile команды
+### Компоненты развертывания
 ```bash
-# Установка и настройка
-make setup                    # Полная установка
-make setup-db                 # Только база данных
-make install-deps            # Python зависимости
-
-# Управление данными
-make import-sample           # Загрузка примеров данных
-make generate-template       # Создание Excel шаблона
-make import-excel-all EXCEL_FILE=path  # Импорт из Excel
-
-# Мониторинг и отчеты
-make stats                   # Статистика БД
-make show-categories         # Категории тестов  
-make show-completion         # Завершенность тестов
-make validate               # Проверка целостности
-
-# Поиск и анализ
-make search-strain STRAIN_ID=id    # Поиск штамма
-make show-strain-profile STRAIN_ID=id  # Профиль штамма
-
-# Обслуживание
-make backup                  # Резервная копия
-make psql                   # Подключение к БД
+scripts/deployment/
+├── deploy_to_4feb.sh          # Основной скрипт
+│   ├── Детекция изменений через git diff
+│   ├── Сборка Docker образов
+│   ├── Push в Docker Hub
+│   ├── Backup БД на удаленном сервере
+│   ├── Pull и restart контейнеров
+│   └── Health checks
+│
+├── watch_and_deploy.sh        # Автоматический мониторинг
+│   ├── Мониторинг git изменений каждые 30с
+│   ├── Автоматический pull
+│   ├── Запуск deploy_to_4feb.sh
+│   └── Логирование в auto_deploy.log
+│
+└── webhook_server.py          # HTTP API развертывания
+    ├── HTTP сервер на порту 9000
+    ├── HMAC подпись для безопасности
+    ├── IP фильтрация
+    └── Асинхронное выполнение развертывания
 ```
 
-## Безопасность и права доступа
+### Workflow развертывания
+```mermaid
+graph TD
+    A[Изменения в Git] --> B[Детекция изменений]
+    B --> C{Что изменилось?}
+    C -->|Backend| D[Сборка backend образа]
+    C -->|Frontend| E[Сборка frontend образа]
+    C -->|Оба| F[Сборка обоих образов]
+    D --> G[Push в Docker Hub]
+    E --> G
+    F --> G
+    G --> H[Backup БД на 4feb]
+    H --> I[Pull образов на 4feb]
+    I --> J[Restart контейнеров]
+    J --> K[Health checks]
+    K --> L[Уведомление о результате]
+```
 
-### Пользователи базы данных
-- **lysobacter_user** - основной пользователь для работы с данными
-- Минимальные необходимые права (не superuser)
-- Доступ только к схеме lysobacter
+## Production Environment
 
-### Аудит изменений
-- Автоматическое логирование всех изменений
-- Triggers для отслеживания UPDATE операций
-- Хранение JSON diff в audit_log таблице
+### Сервер 4feb (89.169.171.236)
+```
+Services:
+├── Frontend (Port 3000)
+│   └── React SPA в Docker контейнере
+├── Backend (Port 8000)
+│   └── FastAPI в Docker контейнере
+├── PostgreSQL (Port 5432)
+│   └── База данных штаммов
+└── Docker Registry
+    └── Локальные образы из Docker Hub
+```
 
-## Резервное копирование
+### Docker Configuration
+```yaml
+# docker-compose.production.yml
+version: '3.8'
+services:
+  frontend:
+    image: gimmyhat/lysodata-frontend:latest
+    ports:
+      - "3000:80"
+    restart: unless-stopped
 
-### Стратегия backup
-- Регулярные дампы через pg_dump
-- Именование файлов с timestamp
-- Сжатие больших дампов
-- Проверка целостности backup'ов
+  backend:
+    image: gimmyhat/lysodata-backend:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://...
+    restart: unless-stopped
+    depends_on:
+      - postgres
 
-### Восстановление
-- Полное восстановление из дампа
-- Возможность восстановления отдельных таблиц
-- Тестирование процедур восстановления
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=lysodata
+      - POSTGRES_USER=lysodata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+```
 
-## Мониторинг и метрики
+## Алгоритм идентификации
 
-### Ключевые метрики
-- Количество штаммов и результатов тестов
-- Процент завершенности данных  
-- Производительность запросов
-- Размер базы данных и индексов
+### Поиск с погрешностью
+```python
+def identify_strains(test_results: List[TestResult], tolerance: int = 3):
+    """
+    Находит штаммы с максимальным соответствием,
+    допуская до tolerance несовпадений
+    """
+    # 1. Получить все штаммы с результатами тестов
+    # 2. Для каждого штамма подсчитать совпадения
+    # 3. Отфильтровать по tolerance
+    # 4. Отсортировать по количеству совпадений
+    # 5. Вернуть топ результатов с процентом соответствия
+```
 
-### Инструменты мониторинга
-- SQL запросы для получения статистики
-- Представления для анализа полноты данных
-- Функции валидации для проверки целостности
+### Система мастер-дубликатов
+```python
+def normalize_strains():
+    """
+    Автоматическая нормализация дубликатов:
+    1. Поиск групп синонимов по strain_identifier
+    2. Выбор мастер-записи (первая по алфавиту)
+    3. Установка is_duplicate=True для остальных
+    4. Связывание через master_strain_id
+    """
+```
 
-## Совместимость и зависимости
+## Makefile Commands
 
-### Минимальные требования
-- **PostgreSQL 12+** (для поддержки современных возможностей)
-- **Python 3.8+** (для современных библиотек)
-- **psql client** (для командной строки)
+### Основные команды
+```bash
+# Управление проектом
+make help                    # Показать все команды
+make status                  # Статус проекта и компонентов
+make dev-setup              # Настройка среды разработки
+make dev-start              # Запуск development серверов
+make dev-stop               # Остановка development серверов
+make deploy                 # Развертывание на production
 
-### Опциональные компоненты
-- **pgAdmin** - графический интерфейс управления
-- **DBeaver** - универсальный клиент БД
-- **Jupyter Notebook** - для аналитики данных
+# CI/CD операции
+make cicd-help              # Показать CI/CD команды
+make cicd-deploy            # Развертывание через CI/CD
+make cicd-status            # Статус CI/CD системы
+make cicd-setup             # Настройка CI/CD
+```
 
-## Развитие и расширение
+### Специализированные команды
+```bash
+# Development
+make -f config/makefiles/Makefile.development setup
+make -f config/makefiles/Makefile.development test
 
-### Планируемые улучшения
-1. **Web интерфейс** - для удобного управления данными
-2. **REST API** - для интеграции с внешними системами
-3. **Расширенная аналитика** - статистические функции
-4. **Геномные данные** - интеграция с секвенированием
-5. **Изображения** - хранение микрофотографий
+# Production
+make -f config/makefiles/Makefile.production deploy
+make -f config/makefiles/Makefile.production backup
 
-### Масштабируемость  
-- **Партиционирование** - для больших таблиц результатов
-- **Read replicas** - для аналитических запросов
-- **Кэширование** - для часто используемых данных
-- **Асинхронные операции** - для массового импорта 
+# CI/CD
+make -f config/makefiles/Makefile.cicd watch-start
+make -f config/makefiles/Makefile.cicd webhook-start
+make -f config/makefiles/Makefile.cicd deploy-force
+```
+
+## Мониторинг и логирование
+
+### Health Checks
+```python
+# Backend health check
+GET /api/health/
+{
+    "status": "healthy",
+    "database": "connected",
+    "timestamp": "2025-06-29T23:00:00Z"
+}
+
+# Frontend health check
+curl http://89.169.171.236:3000
+# HTTP 200 OK - приложение доступно
+```
+
+### Логирование
+```
+logs/
+├── deployment.log           # Логи развертывания
+├── webhook.log             # Логи webhook сервера
+├── auto_deploy.log         # Логи автоматического развертывания
+└── application.log         # Логи приложения
+```
+
+## Безопасность
+
+### Production настройки
+- **CORS** - настроен для production домена
+- **Environment variables** - чувствительные данные в .env
+- **SSH keys** - аутентификация без паролей
+- **HMAC signatures** - подпись webhook запросов
+- **IP filtering** - ограничение доступа к webhook
+
+### Backup стратегия
+- **Автоматический backup** БД перед каждым развертыванием
+- **Retention policy** - хранение последних 7 backup'ов
+- **Проверка целостности** - валидация backup файлов
+
+Система **LysoData-Miner** представляет собой современное, масштабируемое и безопасное решение для научных исследований в области микробиологии. 

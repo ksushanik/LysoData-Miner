@@ -1,0 +1,214 @@
+# Canonical list of test parameters for Lysobacter identification
+# code: unique machine code (test_code)
+# label: human-readable name (ru)
+# type: numeric | qualitative
+# category: morphological | physiological | biochemical_enzymes | biochemical_breakdown | biochemical_utilization | biochemical_other
+# unit: measurement unit for numeric tests (optional)
+
+- code: spore_formation
+  label: Спорообразование
+  type: boolean
+  category: morphological
+
+- code: motility
+  label: Подвижность
+  type: boolean
+  category: morphological
+
+# Physiological numeric tests
+- code: temperature_min
+  label: Температура (мин)
+  type: numeric
+  category: physiological
+  unit: "°C"
+- code: temperature_opt
+  label: Температура (опт)
+  type: numeric
+  category: physiological
+  unit: "°C"
+- code: temperature_max
+  label: Температура (макс)
+  type: numeric
+  category: physiological
+  unit: "°C"
+- code: ph_min
+  label: pH (мин)
+  type: numeric
+  category: physiological
+- code: ph_opt
+  label: pH (опт)
+  type: numeric
+  category: physiological
+- code: ph_max
+  label: pH (макс)
+  type: numeric
+  category: physiological
+- code: salt_tolerance
+  label: Солеустойчивость
+  type: boolean
+  category: physiological
+
+# Biochemical enzymes
+- code: proteolytic_activity
+  label: Протеолитическая активность
+  type: boolean
+  category: biochemical_enzymes
+- code: oxidase
+  label: Оксидаза
+  type: boolean
+  category: biochemical_enzymes
+- code: catalase
+  label: Каталаза
+  type: boolean
+  category: biochemical_enzymes
+- code: urease
+  label: Уреаза
+  type: boolean
+  category: biochemical_enzymes
+- code: nitrate_reduction
+  label: Восстановление нитрата
+  type: boolean
+  category: biochemical_enzymes
+- code: indole_production
+  label: Продукция индола
+  type: boolean
+  category: biochemical_enzymes
+- code: phosphatase
+  label: Фосфатаза
+  type: boolean
+  category: biochemical_enzymes
+- code: esterase
+  label: Эстераза
+  type: boolean
+  category: biochemical_enzymes
+
+# Biochemical breakdown tests
+- code: starch
+  label: Расщепление крахмала
+  type: boolean
+  category: biochemical_breakdown
+- code: aesculin
+  label: Эскулин
+  type: boolean
+  category: biochemical_breakdown
+- code: gelatin
+  label: Желатин
+  type: boolean
+  category: biochemical_breakdown
+- code: casein
+  label: Казеин
+  type: boolean
+  category: biochemical_breakdown
+- code: tween_20
+  label: Tween 20
+  type: boolean
+  category: biochemical_breakdown
+- code: tween_40
+  label: Tween 40
+  type: boolean
+  category: biochemical_breakdown
+- code: tween_60
+  label: Tween 60
+  type: boolean
+  category: biochemical_breakdown
+- code: chitin
+  label: Хитин
+  type: boolean
+  category: biochemical_breakdown
+- code: cellulose
+  label: Целлюлоза
+  type: boolean
+  category: biochemical_breakdown
+- code: arginine_hydrolase
+  label: Аргинин-гидролаза
+  type: boolean
+  category: biochemical_breakdown
+- code: pectin
+  label: Пектин
+  type: boolean
+  category: biochemical_breakdown
+- code: glucose_fermentation
+  label: Ферментация глюкозы
+  type: boolean
+  category: biochemical_breakdown
+
+# Biochemical utilization (sugars)
+- code: maltose
+  label: Мальтоза
+  type: boolean
+  category: biochemical_utilization
+- code: lactose
+  label: Лактоза
+  type: boolean
+  category: biochemical_utilization
+- code: fructose
+  label: Фруктоза
+  type: boolean
+  category: biochemical_utilization
+- code: arabinose
+  label: Арабиноза
+  type: boolean
+  category: biochemical_utilization
+- code: mannose
+  label: Манноза
+  type: boolean
+  category: biochemical_utilization
+- code: trehalose
+  label: Трегалоза
+  type: boolean
+  category: biochemical_utilization
+- code: sorbitol
+  label: Сорбит
+  type: boolean
+  category: biochemical_utilization
+- code: mannitol
+  label: Маннит
+  type: boolean
+  category: biochemical_utilization
+- code: dextrose
+  label: Декстроза
+  type: boolean
+  category: biochemical_utilization
+- code: xylose
+  label: Ксиллоза
+  type: boolean
+  category: biochemical_utilization
+- code: galactose
+  label: Галактоза
+  type: boolean
+  category: biochemical_utilization
+- code: dulcitol
+  label: Дульцитол
+  type: boolean
+  category: biochemical_utilization
+- code: cellobiose
+  label: Целлобиоза
+  type: boolean
+  category: biochemical_utilization
+- code: sucrose
+  label: Сахароза
+  type: boolean
+  category: biochemical_utilization
+- code: raffinose
+  label: Раффиноза
+  type: boolean
+  category: biochemical_utilization
+- code: inositol
+  label: Инозитол
+  type: boolean
+  category: biochemical_utilization
+
+# Other biochemical
+- code: cellulase_activity
+  label: Целлюлазная активность
+  type: boolean
+  category: biochemical_other
+- code: phosphate_solubilization
+  label: Солюбилизация фосфатов
+  type: boolean
+  category: biochemical_other
+- code: gc_content
+  label: GC-состав
+  type: numeric
+  category: biochemical_other
+  unit: "%" 

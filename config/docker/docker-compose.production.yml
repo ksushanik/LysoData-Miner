@@ -1,0 +1,219 @@
+version: '3.8'
+
+services:
+  # 🗄️ PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: lysodata_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lysobacter_db}
+      POSTGRES_USER: ${POSTGRES_USER:-lysobacter_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lysobacter_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "${DB_PORT:-5434}:5432"
+    volumes:
+      # Данные базы (persistent)
+      - postgres_data:/var/lib/postgresql/data
+      # Бэкапы на хост-машине (не в контейнере)
+      - ./backups:/backups
+      # SQL схема для инициализации
+      - ./database/schema:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lysobacter_user} -d ${POSTGRES_DB:-lysobacter_db}"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - lysodata_net
+    labels:
+      - "lysodata.service=database"
+      - "lysodata.description=PostgreSQL database with Lysobacter strains data"
+
+  # 🚀 FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lysodata_api
+    restart: unless-stopped
+    environment:
+      # Database connection
+      POSTGRES_HOST: database
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-lysobacter_db}
+      POSTGRES_USER: ${POSTGRES_USER:-lysobacter_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lysobacter_password}
+      
+      # Application settings
+      APP_NAME: LysoData-Miner
+      DEBUG: "false"
+      HOST: 0.0.0.0
+      PORT: "8000"
+      
+      # API settings
+      MAX_RESULTS_PER_PAGE: "100"
+      DEFAULT_TOLERANCE: "2"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+      data-init:
+        condition: service_completed_successfully
+    networks:
+      - lysodata_net
+    labels:
+      - "lysodata.service=backend"
+      - "lysodata.description=FastAPI backend for strain identification"
+
+  # ⚛️ React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lysodata_web
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: /api
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - lysodata_net
+    labels:
+      - "lysodata.service=frontend"
+      - "lysodata.description=React frontend for Lysobacter strain identification"
+
+  # 📊 Data Initialization (одноразовый сервис)
+  data-init:
+    image: postgres:15-alpine
+    container_name: lysodata_init
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-lysobacter_password}
+      POSTGRES_HOST: database
+      POSTGRES_USER: ${POSTGRES_USER:-lysobacter_user}
+      POSTGRES_DB: ${POSTGRES_DB:-lysobacter_db}
+    volumes:
+      - ./database/schema:/schema:ro
+      - ./database/examples:/examples:ro
+      - ./database/data:/data:ro
+      - ./scripts:/scripts:ro
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - lysodata_net
+    command: |
+      sh -c "
+        echo '🔄 Waiting for database to be ready...'
+        sleep 5
+        
+        echo '📋 Loading reference data and schema updates...'
+        
+        # Проверяем существование таблиц
+        TABLES=$$(psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -t -c \"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='lysobacter'\")
+        
+        if [ \"$$TABLES\" -lt \"10\" ]; then
+          echo '⚠️  Tables not found, running full initialization...'
+          
+          # Основная схема (если не создана через initdb)
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/01_create_tables.sql || echo 'Tables may already exist'
+          
+          # Справочные данные  
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/02_insert_reference_data.sql || echo 'Reference data may already exist'
+          
+          # Представления и функции
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/03_views_and_functions.sql || echo 'Views may already exist'
+          
+          # Миграции
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/04_add_species.sql || echo 'Species migration may be applied'
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/05_enforce_canonical.sql || echo 'Canonical migration may be applied'
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/06_add_duplicate_flag.sql || echo 'Duplicate flag migration may be applied'
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/07_add_master_link.sql || echo 'Master link migration may be applied'
+        else
+          echo '✅ Tables found, running incremental updates only...'
+          
+          # Только новые миграции
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/06_add_duplicate_flag.sql || echo 'Duplicate flag already exists'
+          psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema/07_add_master_link.sql || echo 'Master link already exists'
+        fi
+        
+        echo '📊 Loading sample data...'
+        psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -f /examples/sample_data.sql || echo 'Sample data loading failed (may already exist)'
+        
+        # Импорт JSON данных если есть
+        if [ -f /data/import_20250628.json ]; then
+          echo '📥 Importing JSON data...'
+          python3 /scripts/import_json.py --json-file /data/import_20250628.json --import --db-host database || echo 'JSON import failed (may already exist)'
+        fi
+        
+        echo '✅ Database initialization completed!'
+        
+        # Статистика
+        echo '📊 Database statistics:'
+        psql -h database -U $$POSTGRES_USER -d $$POSTGRES_DB -c \"
+          SELECT 
+            'Strains: ' || COUNT(*) FROM lysobacter.strains
+          UNION ALL
+          SELECT 
+            'Categories: ' || COUNT(*) FROM lysobacter.test_categories
+          UNION ALL
+          SELECT 
+            'Tests: ' || COUNT(*) FROM lysobacter.tests
+          UNION ALL
+          SELECT 
+            'Boolean results: ' || COUNT(*) FROM lysobacter.test_results_boolean
+          UNION ALL
+          SELECT 
+            'Numeric results: ' || COUNT(*) FROM lysobacter.test_results_numeric;
+        \"
+      "
+    labels:
+      - "lysodata.service=init"
+      - "lysodata.description=One-time data initialization service"
+
+  # 🔧 pgAdmin (optional - use with --profile admin)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: lysodata_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@lysodata.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "${PGADMIN_PORT:-8082}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - lysodata_net
+    labels:
+      - "lysodata.service=admin"
+      - "lysodata.description=pgAdmin interface for database management"
+    profiles:
+      - admin
+
+volumes:
+  postgres_data:
+    driver: local
+    labels:
+      - "lysodata.volume=database"
+  pgadmin_data:
+    driver: local
+    labels:
+      - "lysodata.volume=admin"
+
+networks:
+  lysodata_net:
+    driver: bridge
+    labels:
+      - "lysodata.network=main" 

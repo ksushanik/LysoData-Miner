@@ -1,0 +1,255 @@
+# 🚀 LysoData-Miner CI/CD Management Makefile
+# ==========================================
+
+.PHONY: help deploy deploy-force deploy-frontend deploy-backend deploy-dry-run
+.PHONY: watch-start watch-stop watch-status watch-logs
+.PHONY: webhook-start webhook-stop webhook-status webhook-test
+.PHONY: cicd-setup cicd-status cicd-clean
+
+# Colors
+BLUE := \033[34m
+GREEN := \033[32m
+YELLOW := \033[33m
+RED := \033[31m
+PURPLE := \033[35m
+CYAN := \033[36m
+RESET := \033[0m
+
+# Configuration
+DEPLOY_SCRIPT := ./scripts/deployment/deploy_to_4feb.sh
+WATCH_SCRIPT := ./scripts/deployment/watch_and_deploy.sh
+WEBHOOK_SCRIPT := ./scripts/deployment/webhook_server.py
+WEBHOOK_PORT := 9000
+
+help: ## Show CI/CD management commands
+	@echo "$(BLUE)🚀 LysoData-Miner CI/CD Management$(RESET)"
+	@echo "$(BLUE)==================================$(RESET)"
+	@echo ""
+	@echo "$(GREEN)🚀 Manual Deployment:$(RESET)"
+	@echo "  make deploy              # Full deployment to 4feb server"
+	@echo "  make deploy-force        # Force rebuild and deploy"
+	@echo "  make deploy-frontend     # Deploy only frontend"
+	@echo "  make deploy-backend      # Deploy only backend"
+	@echo "  make deploy-dry-run      # Preview deployment actions"
+	@echo ""
+	@echo "$(GREEN)👁️  Auto-Deploy Watcher:$(RESET)"
+	@echo "  make watch-start         # Start auto-deploy watcher"
+	@echo "  make watch-stop          # Stop auto-deploy watcher"
+	@echo "  make watch-status        # Show watcher status"
+	@echo "  make watch-logs          # Show watcher logs"
+	@echo ""
+	@echo "$(GREEN)🔗 Webhook Server:$(RESET)"
+	@echo "  make webhook-start       # Start webhook deploy server"
+	@echo "  make webhook-stop        # Stop webhook server"
+	@echo "  make webhook-status      # Check webhook server"
+	@echo "  make webhook-test        # Test webhook endpoint"
+	@echo ""
+	@echo "$(GREEN)⚙️  System Management:$(RESET)"
+	@echo "  make cicd-setup          # Setup CI/CD system"
+	@echo "  make cicd-status         # Show full CI/CD status"
+	@echo "  make cicd-clean          # Clean CI/CD files"
+	@echo ""
+	@echo "$(GREEN)Available commands:$(RESET)"
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ { printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
+# Manual Deployment Commands
+deploy: ## 🚀 Deploy to 4feb server
+	@echo "$(BLUE)🚀 Starting deployment to 4feb server...$(RESET)"
+	@chmod +x $(DEPLOY_SCRIPT)
+	$(DEPLOY_SCRIPT)
+
+deploy-force: ## 🔨 Force rebuild and deploy
+	@echo "$(BLUE)🔨 Force rebuilding and deploying...$(RESET)"
+	@chmod +x $(DEPLOY_SCRIPT)
+	$(DEPLOY_SCRIPT) --force-build
+
+deploy-frontend: ## ⚛️ Deploy only frontend
+	@echo "$(BLUE)⚛️ Deploying frontend only...$(RESET)"
+	@chmod +x $(DEPLOY_SCRIPT)
+	$(DEPLOY_SCRIPT) --frontend-only
+
+deploy-backend: ## 🐍 Deploy only backend
+	@echo "$(BLUE)🐍 Deploying backend only...$(RESET)"
+	@chmod +x $(DEPLOY_SCRIPT)
+	$(DEPLOY_SCRIPT) --backend-only
+
+deploy-dry-run: ## 👁️ Preview deployment actions
+	@echo "$(BLUE)👁️ Previewing deployment actions...$(RESET)"
+	@chmod +x $(DEPLOY_SCRIPT)
+	$(DEPLOY_SCRIPT) --dry-run
+
+# Auto-Deploy Watcher Commands
+watch-start: ## 👁️ Start auto-deploy watcher
+	@echo "$(BLUE)👁️ Starting auto-deploy watcher...$(RESET)"
+	@chmod +x $(WATCH_SCRIPT)
+	$(WATCH_SCRIPT) start
+
+watch-stop: ## 🛑 Stop auto-deploy watcher
+	@echo "$(BLUE)🛑 Stopping auto-deploy watcher...$(RESET)"
+	@chmod +x $(WATCH_SCRIPT)
+	$(WATCH_SCRIPT) stop
+
+watch-status: ## 📊 Show watcher status
+	@chmod +x $(WATCH_SCRIPT)
+	$(WATCH_SCRIPT) status
+
+watch-logs: ## 📋 Show watcher logs
+	@chmod +x $(WATCH_SCRIPT)
+	$(WATCH_SCRIPT) logs
+
+# Webhook Server Commands
+webhook-start: ## 🔗 Start webhook deploy server
+	@echo "$(BLUE)🔗 Starting webhook deploy server...$(RESET)"
+	@chmod +x $(WEBHOOK_SCRIPT)
+	@echo "$(YELLOW)💡 Webhook server will run on port $(WEBHOOK_PORT)$(RESET)"
+	@echo "$(YELLOW)💡 Use Ctrl+C to stop or 'make webhook-stop' from another terminal$(RESET)"
+	python3 $(WEBHOOK_SCRIPT)
+
+webhook-start-bg: ## 🔗 Start webhook server in background
+	@echo "$(BLUE)🔗 Starting webhook deploy server in background...$(RESET)"
+	@chmod +x $(WEBHOOK_SCRIPT)
+	@nohup python3 $(WEBHOOK_SCRIPT) > webhook_server.log 2>&1 & echo $$! > webhook_server.pid
+	@echo "$(GREEN)✅ Webhook server started in background (PID: $$(cat webhook_server.pid))$(RESET)"
+	@echo "$(YELLOW)💡 Use 'make webhook-stop' to stop the server$(RESET)"
+	@echo "$(YELLOW)💡 Use 'make webhook-logs' to view logs$(RESET)"
+
+webhook-stop: ## 🛑 Stop webhook server
+	@echo "$(BLUE)🛑 Stopping webhook server...$(RESET)"
+	@if [ -f webhook_server.pid ]; then \
+		PID=$$(cat webhook_server.pid); \
+		if ps -p $$PID > /dev/null 2>&1; then \
+			kill $$PID; \
+			echo "$(GREEN)✅ Webhook server stopped (PID: $$PID)$(RESET)"; \
+		else \
+			echo "$(YELLOW)⚠️ Webhook server was not running$(RESET)"; \
+		fi; \
+		rm -f webhook_server.pid; \
+	else \
+		echo "$(YELLOW)⚠️ No webhook server PID file found$(RESET)"; \
+	fi
+
+webhook-status: ## 📊 Check webhook server status
+	@echo "$(BLUE)📊 Webhook Server Status$(RESET)"
+	@echo "$(BLUE)========================$(RESET)"
+	@if [ -f webhook_server.pid ]; then \
+		PID=$$(cat webhook_server.pid); \
+		if ps -p $$PID > /dev/null 2>&1; then \
+			echo "$(GREEN)Status: Running (PID: $$PID)$(RESET)"; \
+			echo "$(CYAN)Port: $(WEBHOOK_PORT)$(RESET)"; \
+			echo "$(CYAN)Endpoint: http://localhost:$(WEBHOOK_PORT)$(RESET)"; \
+		else \
+			echo "$(RED)Status: Not running (stale PID file)$(RESET)"; \
+			rm -f webhook_server.pid; \
+		fi; \
+	else \
+		echo "$(RED)Status: Not running$(RESET)"; \
+	fi
+
+webhook-logs: ## 📋 Show webhook server logs
+	@if [ -f webhook_server.log ]; then \
+		echo "$(BLUE)📋 Webhook Server Logs$(RESET)"; \
+		echo "$(BLUE)======================$(RESET)"; \
+		tail -f webhook_server.log; \
+	else \
+		echo "$(YELLOW)⚠️ No webhook server log file found$(RESET)"; \
+	fi
+
+webhook-test: ## 🧪 Test webhook endpoint
+	@echo "$(BLUE)🧪 Testing webhook endpoint...$(RESET)"
+	@echo "$(CYAN)Testing health endpoint...$(RESET)"
+	@curl -s http://localhost:$(WEBHOOK_PORT)/health | python3 -m json.tool || echo "$(RED)❌ Health check failed$(RESET)"
+	@echo ""
+	@echo "$(CYAN)Testing deploy endpoint (dry run)...$(RESET)"
+	@curl -s -X POST http://localhost:$(WEBHOOK_PORT)/deploy \
+		-H "Content-Type: application/json" \
+		-d '{"options": {"dry_run": true}}' | python3 -m json.tool || echo "$(RED)❌ Deploy test failed$(RESET)"
+
+# System Management Commands
+cicd-setup: ## ⚙️ Setup CI/CD system
+	@echo "$(BLUE)⚙️ Setting up CI/CD system...$(RESET)"
+	@echo ""
+	@echo "$(CYAN)📋 Making scripts executable...$(RESET)"
+	@chmod +x $(DEPLOY_SCRIPT)
+	@chmod +x $(WATCH_SCRIPT)
+	@chmod +x $(WEBHOOK_SCRIPT)
+	@echo "$(GREEN)✅ Scripts are executable$(RESET)"
+	@echo ""
+	@echo "$(CYAN)📋 Creating necessary directories...$(RESET)"
+	@mkdir -p logs
+	@echo "$(GREEN)✅ Directories created$(RESET)"
+	@echo ""
+	@echo "$(CYAN)📋 Testing Docker Hub authentication...$(RESET)"
+	@docker info >/dev/null 2>&1 && echo "$(GREEN)✅ Docker is running$(RESET)" || echo "$(RED)❌ Docker is not running$(RESET)"
+	@echo ""
+	@echo "$(GREEN)🎉 CI/CD system setup complete!$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)📋 Next steps:$(RESET)"
+	@echo "  1. Test manual deployment: make deploy-dry-run"
+	@echo "  2. Start auto-watcher: make watch-start"
+	@echo "  3. Start webhook server: make webhook-start-bg"
+	@echo "  4. Check status: make cicd-status"
+
+cicd-status: ## 📊 Show full CI/CD status
+	@echo "$(BLUE)📊 LysoData-Miner CI/CD Status$(RESET)"
+	@echo "$(BLUE)==============================$(RESET)"
+	@echo ""
+	@echo "$(GREEN)🔧 System Components:$(RESET)"
+	@echo -n "  Docker: "
+	@docker info >/dev/null 2>&1 && echo "$(GREEN)✅ Running$(RESET)" || echo "$(RED)❌ Not running$(RESET)"
+	@echo -n "  Git: "
+	@git status >/dev/null 2>&1 && echo "$(GREEN)✅ Repository OK$(RESET)" || echo "$(RED)❌ Not a git repository$(RESET)"
+	@echo -n "  Deploy Script: "
+	@[ -x $(DEPLOY_SCRIPT) ] && echo "$(GREEN)✅ Executable$(RESET)" || echo "$(RED)❌ Not executable$(RESET)"
+	@echo ""
+	@echo "$(GREEN)👁️  Auto-Deploy Watcher:$(RESET)"
+	@$(MAKE) -f config/makefiles/Makefile.cicd -s watch-status || echo "  $(RED)❌ Status check failed$(RESET)"
+	@echo ""
+	@echo "$(GREEN)🔗 Webhook Server:$(RESET)"
+	@$(MAKE) -f config/makefiles/Makefile.cicd -s webhook-status || echo "  $(RED)❌ Status check failed$(RESET)"
+	@echo ""
+	@echo "$(GREEN)📊 Remote Server Status:$(RESET)"
+	@echo -n "  Connection: "
+	@ssh 4feb "echo 'OK'" >/dev/null 2>&1 && echo "$(GREEN)✅ Connected$(RESET)" || echo "$(RED)❌ Cannot connect$(RESET)"
+	@echo -n "  Backend API: "
+	@ssh 4feb "curl -sf http://localhost:8000/api/health/ >/dev/null" 2>/dev/null && echo "$(GREEN)✅ Healthy$(RESET)" || echo "$(RED)❌ Not responding$(RESET)"
+	@echo -n "  Frontend: "
+	@ssh 4feb "curl -sf http://localhost:3000 >/dev/null" 2>/dev/null && echo "$(GREEN)✅ Accessible$(RESET)" || echo "$(RED)❌ Not accessible$(RESET)"
+
+cicd-clean: ## 🧹 Clean CI/CD files
+	@echo "$(BLUE)🧹 Cleaning CI/CD files...$(RESET)"
+	@echo "$(YELLOW)⚠️ This will remove logs and PID files$(RESET)"
+	@read -p "Continue? (y/N): " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		rm -f auto_deploy.log webhook_deploy.log webhook_server.log; \
+		rm -f auto_deploy.pid webhook_server.pid; \
+		rm -f .last_deploy_* .last_auto_deploy_commit; \
+		echo "$(GREEN)✅ CI/CD files cleaned$(RESET)"; \
+	else \
+		echo "$(YELLOW)❌ Cleaning cancelled$(RESET)"; \
+	fi
+
+# Quick shortcuts
+start-all: ## 🚀 Start all CI/CD services
+	@echo "$(BLUE)🚀 Starting all CI/CD services...$(RESET)"
+	@$(MAKE) -f Makefile.cicd watch-start
+	@sleep 2
+	@$(MAKE) -f Makefile.cicd webhook-start-bg
+	@echo ""
+	@echo "$(GREEN)🎉 All CI/CD services started!$(RESET)"
+	@echo "$(YELLOW)💡 Use 'make -f Makefile.cicd cicd-status' to check status$(RESET)"
+
+stop-all: ## 🛑 Stop all CI/CD services
+	@echo "$(BLUE)🛑 Stopping all CI/CD services...$(RESET)"
+	@$(MAKE) -f Makefile.cicd watch-stop || true
+	@$(MAKE) -f Makefile.cicd webhook-stop || true
+	@echo "$(GREEN)✅ All CI/CD services stopped$(RESET)"
+
+# Development helpers
+dev-deploy: ## 🔧 Quick development deployment
+	@echo "$(BLUE)🔧 Quick development deployment...$(RESET)"
+	@$(MAKE) -f Makefile.cicd deploy --skip-tests
+
+test-deploy: ## 🧪 Test deployment without actual deploy
+	@echo "$(BLUE)🧪 Testing deployment process...$(RESET)"
+	@$(MAKE) -f Makefile.cicd deploy-dry-run 

@@ -1,0 +1,25 @@
+# LysoData-Miner Main Makefile
+# Consolidated project management
+
+.DEFAULT_GOAL := help
+
+# Include specialized makefiles
+include config/makefiles/Makefile.development
+include config/makefiles/Makefile.production  
+include config/makefiles/Makefile.cicd
+
+help: ## Show this help message
+	@echo "🧬 LysoData-Miner Project Management"
+	@echo "=================================="
+	@echo ""
+	@echo "📋 Available commands:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "📚 Documentation: docs/guides/"
+	@echo "🚀 Quick start: make dev-setup"
+
+dev-setup: ## Setup development environment
+	@echo "🔧 Setting up development environment..."
+	@make -f config/makefiles/Makefile.development setup
+
+.PHONY: help dev-setup

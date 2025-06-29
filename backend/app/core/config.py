@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     
     # CORS settings for frontend integration
     ALLOWED_ORIGINS: str = Field(
-        default="http://localhost:3000,http://127.0.0.1:3000",
+        default="http://localhost:3000,http://127.0.0.1:3000,http://89.169.171.236:3000,http://89.169.171.236:8000",
         description="Allowed CORS origins (comma-separated)"
     )
     

@@ -3,7 +3,11 @@ import type { TestCategory, Test } from '../types';
 import { StrainFormValues } from '../components/StrainForm'
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// Автоматическое определение API URL
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE_URL = isDevelopment 
+  ? 'http://localhost:8000/api'  // Development
+  : '/api';                      // Production (относительный путь)
 
 const api = axios.create({
   baseURL: API_BASE_URL,
