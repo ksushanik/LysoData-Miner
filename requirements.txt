@@ -1,0 +1,16 @@
+# Python dependencies for Lysobacter database project
+# Core database and data processing libraries
+
+# Database connectivity
+psycopg2-binary>=2.9.0
+
+# Data processing and Excel support
+pandas>=1.5.0
+openpyxl>=3.0.0
+xlsxwriter>=3.0.0
+
+# YAML parsing
+PyYAML>=6.0
+
+# Additional utilities
+python-dateutil>=2.8.0 

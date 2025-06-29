@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Lysobacter Database",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "lysobacter_db",
+      "Username": "lysobacter_user",
+      "SSLMode": "prefer",
+      "Comment": "PostgreSQL database for lysobacter strains management"
+    }
+  }
+} 

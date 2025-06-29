@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "source": "Template file - replace with actual source",
+    "created_date": "2025-06-26",
+    "total_strains": 2,
+    "total_test_results": 6,
+    "notes": "This is a template file showing correct JSON structure"
+  },
+  "strains": [
+    {
+      "strain_identifier": "LYS-TEMPLATE-001",
+      "scientific_name": "Lysobacter enzymogenes",
+      "common_name": "Template strain 1",
+      "description": "Example strain for template demonstration",
+      "isolation_source": "Rhizosphere soil",
+      "isolation_location": "Laboratory example",
+      "isolation_date": "2023-01-01",
+      "notes": "Template strain - replace with real data",
+      "test_results": [
+        {
+          "test_code": "spore_formation",
+          "result_value": "-",
+          "test_type": "boolean",
+          "value_type": null,
+          "measurement_unit": null,
+          "confidence_level": "high",
+          "tested_date": "2023-01-02",
+          "notes": "No spores observed"
+        },
+        {
+          "test_code": "motility",
+          "result_value": "+",
+          "test_type": "boolean",
+          "value_type": null,
+          "measurement_unit": null,
+          "confidence_level": "high",
+          "tested_date": "2023-01-02",
+          "notes": "Motile bacteria"
+        },
+        {
+          "test_code": "temperature",
+          "result_value": "25",
+          "test_type": "numeric",
+          "value_type": "optimal",
+          "measurement_unit": "°C",
+          "confidence_level": "high",
+          "tested_date": "2023-01-03",
+          "notes": "Optimal growth temperature"
+        },
+        {
+          "test_code": "catalase",
+          "result_value": "+",
+          "test_type": "boolean",
+          "value_type": null,
+          "measurement_unit": null,
+          "confidence_level": "high",
+          "tested_date": "2023-01-04",
+          "notes": "Positive catalase test"
+        }
+      ]
+    },
+    {
+      "strain_identifier": "LYS-TEMPLATE-002",
+      "scientific_name": "Lysobacter antibioticus",
+      "common_name": "Template strain 2",
+      "description": "Second example strain",
+      "isolation_source": "Agricultural soil",
+      "isolation_location": "Field example",
+      "isolation_date": "2023-02-01",
+      "notes": "Second template strain",
+      "test_results": [
+        {
+          "test_code": "oxidase",
+          "result_value": "+/-",
+          "test_type": "boolean",
+          "value_type": null,
+          "measurement_unit": null,
+          "confidence_level": "medium",
+          "tested_date": "2023-02-02",
+          "notes": "Weak positive reaction"
+        },
+        {
+          "test_code": "ph_level",
+          "result_value": "7.0",
+          "test_type": "numeric",
+          "value_type": "optimal",
+          "measurement_unit": "pH",
+          "confidence_level": "high",
+          "tested_date": "2023-02-03",
+          "notes": "Neutral pH optimal"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+
+СВОДКА ШАБЛОНА EXCEL ФАЙЛА
+=========================
+
+ЛИСТ "Strains":
+- Количество штаммов: 4
+- Колонки: strain_identifier, scientific_name, common_name, description, isolation_source, isolation_location, isolation_date, notes
+
+ЛИСТ "TestResults":  
+- Количество записей: 19
+- Колонки: strain_identifier, test_code, result_value, value_type, measurement_unit, confidence_level, tested_date, notes
+- Тестируемые коды: catalase, glucose_fermentation, lactose, maltose, motility, oxidase, ph_level, proteolytic_activity, salt_tolerance, spore_formation, starch, temperature
+
+ТИПЫ ТЕСТОВ В ШАБЛОНЕ:
+- Морфологические: spore_formation, motility
+- Физиологические: temperature, ph_level, salt_tolerance  
+- Биохимические: catalase, oxidase, proteolytic_activity, starch
+- Утилизация: glucose_fermentation, maltose, lactose
+
+ПРИМЕРЫ ФОРМАТОВ:
+- Булевы тесты: '+', '-', '+/-', 'n.d.'
+- Числовые тесты: числа с указанием value_type (minimum/maximum/optimal)
+- Даты: YYYY-MM-DD формат
+- Уровни уверенности: high, medium, low
+
+ГОТОВ ДЛЯ ИМПОРТА В БАЗУ ДАННЫХ!
