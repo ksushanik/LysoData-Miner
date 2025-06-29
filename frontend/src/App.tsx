@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import SpeciesBrowser from './pages/SpeciesBrowser'
 import SpeciesDetail from './pages/SpeciesDetail'
@@ -13,19 +13,17 @@ import Dashboard from './pages/Dashboard'
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/species" element={<SpeciesBrowser />} />
-          <Route path="/species/:name" element={<SpeciesDetail />} />
-          <Route path="/strains/:id" element={<StrainDetail />} />
-          <Route path="/strains/:id/edit" element={<EditStrainPage />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/compare" element={<ComparePage />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/species" element={<SpeciesBrowser />} />
+        <Route path="/species/:name" element={<SpeciesDetail />} />
+        <Route path="/strains/:id" element={<StrainDetail />} />
+        <Route path="/strains/:id/edit" element={<EditStrainPage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/compare" element={<ComparePage />} />
+      </Routes>
+    </Layout>
   );
 }
 

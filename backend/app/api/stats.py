@@ -7,7 +7,7 @@ from sqlalchemy import text, func, distinct
 import logging
 
 from app.database.connection import get_database_session
-from app.database.models import Strain, TestResultNumeric, TestResultBoolean, TestResultText, TestCategory, Source
+from app.models import Strain, TestResultNumeric, TestResultBoolean, TestResultText, TestCategory, DataSource
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -46,7 +46,7 @@ async def get_dashboard_stats(session: AsyncSession = Depends(get_database_sessi
         
         # 5. Total Sources
         sources_query = await session.execute(
-            text("SELECT COUNT(*) FROM lysobacter.sources")
+            text("SELECT COUNT(*) FROM lysobacter.data_sources")
         )
         total_sources = sources_query.scalar_one_or_none() or 0
 

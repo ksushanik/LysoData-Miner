@@ -1,9 +1,16 @@
 import { StrainData, TestResult } from '../types';
 import type { TestCategory, Test } from '../types';
 import { StrainFormValues } from '../components/StrainForm'
-import api from '../services/api'
+import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 const headersJSON = { 'Content-Type': 'application/json' } as const;
 
@@ -32,48 +39,34 @@ export interface StrainDetailsResponse {
 }
 
 export const fetchStrainDetails = async (strainId: string): Promise<StrainDetailsResponse> => {
-    const response = await fetch(`${API_BASE_URL}/strains/${strainId}`);
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data: StrainDetailsResponse = await response.json();
-    return data;
+    const response = await api.get(`/strains/${strainId}`);
+    return response.data;
 };
 
 export const createStrain = async (data: StrainFormValues) => {
-  const response = await fetch(`${API_BASE_URL}/strains/create/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to create strain');
+  try {
+    const response = await api.post('/strains/create/', data);
+    return response.data;
+  } catch (error: any) {
+    const errorMsg = error.response?.data?.detail || 'Failed to create strain';
+    throw new Error(errorMsg);
   }
-  return response.json();
 };
 
 export const updateStrain = (strainId: number, data: StrainPayload) =>
   api.patch(`/strains/${strainId}/update/`, data).then((res) => res.data)
 
 export const deleteStrain = async (id: number, soft: boolean = true) => {
-  const res = await fetch(`${API_BASE_URL}/strains/${id}?soft=${soft}`, {
-    method: 'DELETE'
-  });
-  if (!res.ok) throw new Error(await res.text());
+  const res = await api.delete(`/strains/${id}?soft=${soft}`);
+  return res.data;
 };
 
 export const fetchTestCategories = async (includeTests: boolean = true): Promise<TestCategoryWithTests[]> => {
-  const res = await fetch(`${API_BASE_URL}/tests/categories?include_tests=${includeTests}`)
-  if (!res.ok) throw new Error(await res.text())
-  const data = await res.json()
-  return data.categories as TestCategoryWithTests[]
+  const res = await api.get(`/tests/categories?include_tests=${includeTests}`);
+  return res.data.categories as TestCategoryWithTests[];
 }
 
 export const getDashboardStats = async () => {
-  const res = await fetch(`${API_BASE_URL}/stats/`)
-  if (!res.ok) throw new Error(await res.text())
-  return res.json()
+  const res = await api.get('/stats/');
+  return res.data;
 } 
