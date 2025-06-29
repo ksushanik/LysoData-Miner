@@ -15,7 +15,7 @@ export default function SpeciesBrowser() {
   const fetchSpecies = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/strains/species')
+      const response = await fetch('http://localhost:8000/api/species')
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }

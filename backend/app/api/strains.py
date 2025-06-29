@@ -307,7 +307,7 @@ async def search_strains(
         raise HTTPException(status_code=500, detail="An error occurred during search.")
 
 
-@router.get("/strains/species", summary="List unique scientific names")
+@router.get("/species", summary="List unique scientific names")
 async def list_species(
     active_only: Optional[bool] = Query(True, description="Return only active strains"),
     db: AsyncSession = Depends(get_database_session)
