@@ -104,7 +104,7 @@ export default function SpeciesDetail() {
             )}
 
             <div className="mt-4 pt-3 border-t border-gray-100">
-              <Link to={`/strains/${strain.strain_id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              <Link to={`/strains/${strain.strain_id}`} state={{ scientificName: decodedName }} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                 View Details →
               </Link>
             </div>

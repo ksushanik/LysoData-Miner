@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { Strain, TestResult, CollectionNumber } from 'types';
 import { fetchStrainDetails } from 'services/api';
 import { ArrowLeft, Dna, Beaker, Thermometer, Droplet, Microscope, Ruler, FlaskConical, TestTube, ChevronsRight } from 'lucide-react';
@@ -61,6 +61,8 @@ const suffixOrder: Record<string, number> = { 'мин': 0, 'опт': 1, 'мак�
 
 const StrainDetail: React.FC = () => {
     const { strainId } = useParams<{ strainId: string }>();
+    const location = useLocation();
+    const speciesNameFromState = (location.state as { scientificName?: string })?.scientificName;
     const [strain, setStrain] = useState<Strain | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -118,7 +120,7 @@ const StrainDetail: React.FC = () => {
     return (
         <div className="container mx-auto p-4 md:p-8 bg-gray-50 min-h-screen">
             <div className="mb-8">
-                <Link to="/strains" className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+                <Link to={speciesNameFromState ? `/strains/species/${encodeURIComponent(speciesNameFromState)}` : '/strains'} className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
                     <ArrowLeft className="mr-2" size={18} />
                     Назад к списку штаммов
                 </Link>
