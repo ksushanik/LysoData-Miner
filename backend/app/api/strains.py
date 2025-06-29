@@ -464,9 +464,9 @@ class TextResultIn(BaseModel):
 
 TestResultIn = Annotated[Union[BooleanResultIn, NumericResultIn, TextResultIn], Field(discriminator='type')]
 
-# allow forward reference in StrainCreate/Update
-StrainCreate.update_forward_refs(TestResultIn=TestResultIn)
-StrainUpdate.update_forward_refs(TestResultIn=TestResultIn)
+# rebuild models to resolve forward refs (Pydantic v2)
+StrainCreate.model_rebuild()
+StrainUpdate.model_rebuild()
 
 
 # ------------------------------------------------
