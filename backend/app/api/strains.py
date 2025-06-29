@@ -13,6 +13,8 @@ import json
 import logging
 import traceback
 from pydantic import BaseModel, Field
+from datetime import date
+from decimal import Decimal
 
 from app.database.connection import get_database_session
 from app.models.strain import Strain, StrainCollection
@@ -405,4 +407,145 @@ async def get_strains_batch(
         return {"strains": formatted}
     except Exception as e:
         logging.error(f"Error fetching batch strains: {e}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve strains batch") 
+        raise HTTPException(status_code=500, detail="Failed to retrieve strains batch")
+
+
+# ----------------------------
+# Pydantic Schemas for CRUD
+# ----------------------------
+
+
+class StrainBase(BaseModel):
+    strain_identifier: Optional[str] = Field(None, max_length=100, description="Unique strain code, e.g. ATCC 29482")
+    scientific_name: Optional[str]
+    common_name: Optional[str]
+    description: Optional[str]
+    isolation_source: Optional[str]
+    isolation_location: Optional[str]
+    isolation_date: Optional[date]
+    source_id: Optional[int]
+    gc_content_min: Optional[Decimal]
+    gc_content_max: Optional[Decimal]
+    gc_content_optimal: Optional[Decimal]
+    notes: Optional[str]
+    is_active: Optional[bool] = True
+
+
+class StrainCreate(StrainBase):
+    strain_identifier: str = Field(..., max_length=100)
+
+
+class StrainUpdate(StrainBase):
+    pass
+
+
+# ------------------------------------------------
+# CREATE STRAIN
+# ------------------------------------------------
+
+
+@router.post("/strains/", status_code=201, summary="Create new strain")
+async def create_strain(payload: StrainCreate, db: AsyncSession = Depends(get_database_session)):
+    """Create a new bacterial strain"""
+    try:
+        # Check uniqueness
+        dup_check = await db.execute(select(Strain).where(Strain.strain_identifier == payload.strain_identifier))
+        if dup_check.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail="Strain with this identifier already exists")
+
+        new_strain = Strain(
+            strain_identifier=payload.strain_identifier,
+            scientific_name=payload.scientific_name,
+            common_name=payload.common_name,
+            description=payload.description,
+            isolation_source=payload.isolation_source,
+            isolation_location=payload.isolation_location,
+            isolation_date=payload.isolation_date,
+            source_id=payload.source_id,
+            gc_content_min=payload.gc_content_min,
+            gc_content_max=payload.gc_content_max,
+            gc_content_optimal=payload.gc_content_optimal,
+            notes=payload.notes,
+            is_active=payload.is_active if payload.is_active is not None else True,
+        )
+
+        db.add(new_strain)
+        await db.commit()
+        await db.refresh(new_strain)
+
+        return {"strain_id": new_strain.strain_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error creating strain: {e}\n{traceback.format_exc()}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create strain")
+
+
+# ------------------------------------------------
+# UPDATE STRAIN
+# ------------------------------------------------
+
+
+@router.put("/strains/{strain_id}", summary="Update strain")
+async def update_strain(strain_id: int, payload: StrainUpdate, db: AsyncSession = Depends(get_database_session)):
+    """Update existing strain"""
+    try:
+        result = await db.execute(select(Strain).where(Strain.strain_id == strain_id))
+        strain = result.scalar_one_or_none()
+        if not strain:
+            raise HTTPException(status_code=404, detail="Strain not found")
+
+        # Check uniqueness on strain_identifier if changed
+        if payload.strain_identifier and payload.strain_identifier != strain.strain_identifier:
+            dup_check = await db.execute(select(Strain).where(Strain.strain_identifier == payload.strain_identifier))
+            if dup_check.scalar_one_or_none():
+                raise HTTPException(status_code=409, detail="Another strain with this identifier already exists")
+
+        update_data = payload.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(strain, field, value)
+
+        await db.commit()
+        await db.refresh(strain)
+
+        return {"detail": "Strain updated", "strain_id": strain.strain_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating strain {strain_id}: {e}\n{traceback.format_exc()}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update strain")
+
+
+# ------------------------------------------------
+# DELETE (SOFT) STRAIN
+# ------------------------------------------------
+
+
+@router.delete("/strains/{strain_id}", summary="Deactivate/Delete strain")
+async def delete_strain(strain_id: int, soft: bool = Query(True, description="Soft delete (set is_active=False)"), db: AsyncSession = Depends(get_database_session)):
+    """Deactivate (soft delete) or permanently delete a strain"""
+    try:
+        result = await db.execute(select(Strain).where(Strain.strain_id == strain_id))
+        strain = result.scalar_one_or_none()
+        if not strain:
+            raise HTTPException(status_code=404, detail="Strain not found")
+
+        if soft:
+            strain.is_active = False
+            await db.commit()
+            return {"detail": "Strain deactivated"}
+        else:
+            await db.delete(strain)
+            await db.commit()
+            return {"detail": "Strain permanently deleted"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting strain {strain_id}: {e}\n{traceback.format_exc()}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete strain") 
