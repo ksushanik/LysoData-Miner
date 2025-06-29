@@ -35,7 +35,7 @@ export default function SpeciesDetail() {
     const fetchStrains = async () => {
       setLoading(true)
       try {
-        const params = new URLSearchParams({ scientific_name: decodedName, limit: '1000' })
+        const params = new URLSearchParams({ scientific_name: decodedName, limit: '100' })
         const response = await fetch(`http://localhost:8000/api/strains/?${params}`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
