@@ -440,6 +440,34 @@ class StrainUpdate(StrainBase):
     test_results: Optional[List[TestResultIn]] = None
 
 
+# ----------------------------
+# Test result input schemas (must be defined before StrainCreate uses them)
+# ----------------------------
+
+
+class BooleanResultIn(BaseModel):
+    type: Literal['boolean'] = 'boolean'
+    test_id: int = Field(..., gt=0)
+    result_code: str = Field(..., max_length=10)
+
+
+class NumericResultIn(BaseModel):
+    type: Literal['numeric'] = 'numeric'
+    test_id: int = Field(..., gt=0)
+    value_type: Literal['minimum', 'maximum', 'optimal', 'single']
+    numeric_value: Decimal
+    measurement_unit: Optional[str] = None
+
+
+class TextResultIn(BaseModel):
+    type: Literal['text'] = 'text'
+    test_id: int = Field(..., gt=0)
+    text_value: str
+
+
+TestResultIn = Annotated[Union[BooleanResultIn, NumericResultIn, TextResultIn], Field(discriminator='type')]
+
+
 # ------------------------------------------------
 # CREATE STRAIN
 # ------------------------------------------------
@@ -560,34 +588,6 @@ async def delete_strain(strain_id: int, soft: bool = Query(True, description="So
         logging.error(f"Error deleting strain {strain_id}: {e}\n{traceback.format_exc()}")
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete strain")
-
-
-# ----------------------------
-# Test result input schemas
-# ----------------------------
-
-
-class BooleanResultIn(BaseModel):
-    type: Literal['boolean'] = 'boolean'
-    test_id: int = Field(..., gt=0)
-    result_code: str = Field(..., max_length=10, description="Value code like '+', '-', '+/-'")
-
-
-class NumericResultIn(BaseModel):
-    type: Literal['numeric'] = 'numeric'
-    test_id: int = Field(..., gt=0)
-    value_type: Literal['minimum', 'maximum', 'optimal', 'single']
-    numeric_value: Decimal
-    measurement_unit: Optional[str] = None
-
-
-class TextResultIn(BaseModel):
-    type: Literal['text'] = 'text'
-    test_id: int = Field(..., gt=0)
-    text_value: str
-
-
-TestResultIn = Annotated[Union[BooleanResultIn, NumericResultIn, TextResultIn], Field(discriminator='type')]
 
 
 # ------------------------------------------------
