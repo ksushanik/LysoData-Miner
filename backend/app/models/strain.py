@@ -35,6 +35,11 @@ class Strain(Base):
     gc_content_optimal = Column(DECIMAL(5,2), nullable=True)
     notes = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    
+    # New fields for duplicate handling
+    is_duplicate = Column(Boolean, default=False, nullable=False, index=True)
+    master_strain_id = Column(Integer, ForeignKey("lysobacter.strains.strain_id"), nullable=True)
+    
     created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False)
     
@@ -44,6 +49,10 @@ class Strain(Base):
     boolean_results = relationship("TestResultBoolean", back_populates="strain", cascade="all, delete-orphan")
     numeric_results = relationship("TestResultNumeric", back_populates="strain", cascade="all, delete-orphan")
     text_results = relationship("TestResultText", back_populates="strain", cascade="all, delete-orphan")
+    
+    # Relationships for master/duplicate strains
+    master_strain = relationship("Strain", remote_side=[strain_id], back_populates="duplicates")
+    duplicates = relationship("Strain", back_populates="master_strain")
     
     def __repr__(self) -> str:
         return f"<Strain(id={self.strain_id}, identifier='{self.strain_identifier}', name='{self.scientific_name}')>"

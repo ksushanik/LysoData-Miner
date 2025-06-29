@@ -1,62 +1,55 @@
 """
 API endpoints for providing database statistics.
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text, func, distinct
+from sqlalchemy import select, func
 import logging
 
 from app.database.connection import get_database_session
-from app.models import Strain, TestResultNumeric, TestResultBoolean, TestResultText, TestCategory, DataSource
+from app.models import Strain, Test, TestCategory, TestResultNumeric, TestResultBoolean, TestResultText, DataSource, StrainCollection
 
 logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
-@router.get("/stats/", summary="Get Dashboard Statistics")
+@router.get("/", summary="Get dashboard statistics")
 async def get_dashboard_stats(session: AsyncSession = Depends(get_database_session)):
     """
-    Retrieve aggregated statistics for the main dashboard.
+    Returns main statistics for the dashboard.
     """
+    total_strains_query = select(func.count(Strain.strain_id))
+    total_categories_query = select(func.count(TestCategory.category_id))
+    
+    total_results_numeric_query = select(func.count(TestResultNumeric.result_id))
+    total_results_boolean_query = select(func.count(TestResultBoolean.result_id))
+    total_results_text_query = select(func.count(TestResultText.result_id))
+
+    total_species_query = select(func.count(func.distinct(Strain.scientific_name)))
+    total_sources_query = select(func.count(DataSource.source_id))
+    total_collection_numbers_query = select(func.count(StrainCollection.strain_id))
+
     try:
-        # 1. Total Species (unique scientific names)
-        species_query = await session.execute(
-            text("SELECT COUNT(DISTINCT scientific_name) FROM lysobacter.strains")
-        )
-        total_species = species_query.scalar_one_or_none() or 0
-
-        # 2. Total Strains
-        strains_query = await session.execute(
-            text("SELECT COUNT(*) FROM lysobacter.strains")
-        )
-        total_strains = strains_query.scalar_one_or_none() or 0
-
-        # 3. Total Test Results
-        numeric_results = await session.execute(text("SELECT COUNT(*) FROM lysobacter.test_results_numeric"))
-        boolean_results = await session.execute(text("SELECT COUNT(*) FROM lysobacter.test_results_boolean"))
-        text_results = await session.execute(text("SELECT COUNT(*) FROM lysobacter.test_results_text"))
-        total_test_results = (numeric_results.scalar_one() or 0) + \
-                             (boolean_results.scalar_one() or 0) + \
-                             (text_results.scalar_one() or 0)
-
-        # 4. Total Test Categories
-        categories_query = await session.execute(
-            text("SELECT COUNT(*) FROM lysobacter.test_categories")
-        )
-        total_categories = categories_query.scalar_one_or_none() or 0
+        total_strains = (await session.execute(total_strains_query)).scalar_one()
+        total_categories = (await session.execute(total_categories_query)).scalar_one()
         
-        # 5. Total Sources
-        sources_query = await session.execute(
-            text("SELECT COUNT(*) FROM lysobacter.data_sources")
-        )
-        total_sources = sources_query.scalar_one_or_none() or 0
+        numeric_results = (await session.execute(total_results_numeric_query)).scalar_one()
+        boolean_results = (await session.execute(total_results_boolean_query)).scalar_one()
+        text_results = (await session.execute(total_results_text_query)).scalar_one()
+        total_test_results = numeric_results + boolean_results + text_results
+        
+        total_species = (await session.execute(total_species_query)).scalar_one()
+        total_sources = (await session.execute(total_sources_query)).scalar_one()
+        total_collection_numbers = (await session.execute(total_collection_numbers_query)).scalar_one()
 
         return {
-            "total_species": total_species,
             "total_strains": total_strains,
             "total_test_results": total_test_results,
-            "total_categories": total_categories,
+            "total_species": total_species,
             "total_sources": total_sources,
+            "total_collection_numbers": total_collection_numbers,
+            "total_categories": total_categories,
         }
     except Exception as e:
-        logger.error(f"Error fetching dashboard statistics: {e}", exc_info=True)
-        return {"error": "Could not retrieve statistics"} 
+        logger.error(f"Error fetching dashboard stats: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error while fetching stats.") 

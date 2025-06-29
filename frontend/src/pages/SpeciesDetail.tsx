@@ -9,6 +9,8 @@ interface Strain {
   common_name: string
   description?: string
   is_active: boolean
+  is_duplicate: boolean
+  is_master: boolean
 }
 
 interface PaginationData {
@@ -31,6 +33,7 @@ export default function SpeciesDetail() {
   const [strains, setStrains] = useState<Strain[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [includeDuplicates, setIncludeDuplicates] = useState(false)
   const { selected, toggle } = useContext(CompareContext)
 
   useEffect(() => {
@@ -38,6 +41,9 @@ export default function SpeciesDetail() {
       setLoading(true)
       try {
         const params = new URLSearchParams({ scientific_name: decodedName, limit: '100' })
+        if (includeDuplicates) {
+          params.append('include_duplicates', 'true')
+        }
         const response = await fetch(`http://localhost:8000/api/strains/?${params}`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
@@ -54,7 +60,7 @@ export default function SpeciesDetail() {
     }
 
     fetchStrains()
-  }, [decodedName])
+  }, [decodedName, includeDuplicates])
 
   if (loading) {
     return (
@@ -86,43 +92,70 @@ export default function SpeciesDetail() {
         </Link>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {strains.map((strain) => (
-          <div key={strain.strain_id} className="bg-white rounded-xl shadow-md border border-border p-6 flex flex-col transition-all duration-300 hover:shadow-lg hover:border-primary/50">
-            <div className="flex-grow">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-xl font-bold text-foreground">
-                  {strain.strain_identifier}
-                </h3>
-                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-                  strain.is_active ? 'bg-green-100 text-green-800' : 'bg-muted text-muted-foreground'
-                }`}>
-                  {strain.is_active ? 'Active' : 'Inactive'}
-                </span>
+      <div className="mb-4 flex items-center">
+        <input
+          type="checkbox"
+          id="include-duplicates"
+          checked={includeDuplicates}
+          onChange={(e) => setIncludeDuplicates(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+        />
+        <label htmlFor="include-duplicates" className="ml-2 block text-sm text-gray-900">
+          Показать дубликаты
+        </label>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {strains.map((strain) => {
+          return (
+            <div key={strain.strain_id} className="bg-card border rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between p-4">
+              <div>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold text-foreground">
+                    {strain.strain_identifier}
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    {strain.is_master && (
+                      <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full border border-blue-300">
+                        Основной
+                      </span>
+                    )}
+                    {strain.is_duplicate && (
+                      <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-1 rounded-full">
+                        Дубликат
+                      </span>
+                    )}
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                      strain.is_active ? 'bg-green-100 text-green-800' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {strain.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+
+                {strain.common_name && (
+                  <p className="text-sm text-muted-foreground mb-2">Common name: {strain.common_name}</p>
+                )}
+
+                {strain.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-3">{strain.description}</p>
+                )}
               </div>
 
-              {strain.common_name && (
-                <p className="text-sm text-muted-foreground mb-2">Common name: {strain.common_name}</p>
-              )}
-
-              {strain.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{strain.description}</p>
-              )}
+              <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
+                <Link to={`/strains/${strain.strain_id}`} state={{ name: decodedName }} className="text-primary hover:text-primary-dark text-sm font-semibold transition-colors">
+                  View Details →
+                </Link>
+                <button
+                  onClick={() => toggle(strain.strain_id)}
+                  className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+                >
+                  {selected.includes(strain.strain_id) ? '− Убрать' : '+ В сравнение'}
+                </button>
+              </div>
             </div>
-
-            <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
-              <Link to={`/strains/${strain.strain_id}`} state={{ name: decodedName }} className="text-primary hover:text-primary-dark text-sm font-semibold transition-colors">
-                View Details →
-              </Link>
-              <button
-                onClick={() => toggle(strain.strain_id)}
-                className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
-              >
-                {selected.includes(strain.strain_id) ? '− Убрать' : '+ В сравнение'}
-              </button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

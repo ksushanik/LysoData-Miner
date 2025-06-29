@@ -13,6 +13,7 @@ interface Strain {
   isolation_date?: string
   gc_content_range?: string
   is_active: boolean
+  is_duplicate: boolean;
 }
 
 interface PaginationData {
@@ -35,14 +36,16 @@ export default function StrainBrowser() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(0)
+  const [includeDuplicates, setIncludeDuplicates] = useState(false);
   const { selected, toggle } = useContext(CompareContext)
 
-  const fetchStrains = async (page = 0, search = '') => {
+  const fetchStrains = async (page = 0, search = '', duplicates = false) => {
     setLoading(true)
     try {
       const searchParams = new URLSearchParams({
         skip: (page * 20).toString(),
-        limit: '20'
+        limit: '20',
+        include_duplicates: String(duplicates)
       })
       
       if (search) {
@@ -68,13 +71,13 @@ export default function StrainBrowser() {
   }
 
   useEffect(() => {
-    fetchStrains(currentPage, searchTerm)
-  }, [currentPage, searchTerm])
+    fetchStrains(currentPage, searchTerm, includeDuplicates)
+  }, [currentPage, searchTerm, includeDuplicates])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setCurrentPage(0)
-    fetchStrains(0, searchTerm)
+    fetchStrains(0, searchTerm, includeDuplicates)
   }
 
   const handlePageChange = (newPage: number) => {
@@ -96,7 +99,7 @@ export default function StrainBrowser() {
         <h2 className="text-xl font-semibold mb-2">Error Loading Strains</h2>
         <p>{error}</p>
         <button 
-          onClick={() => fetchStrains(currentPage, searchTerm)}
+          onClick={() => fetchStrains(currentPage, searchTerm, includeDuplicates)}
           className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Retry
@@ -134,6 +137,20 @@ export default function StrainBrowser() {
             Search
           </button>
         </form>
+        <div className="mt-4">
+            <label className="flex items-center space-x-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={includeDuplicates}
+                onChange={(e) => {
+                    setIncludeDuplicates(e.target.checked);
+                    setCurrentPage(0);
+                }}
+                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              />
+              <span>Показать дубликаты</span>
+            </label>
+        </div>
       </div>
 
       {/* Results Info */}
@@ -148,8 +165,13 @@ export default function StrainBrowser() {
         {strains.map((strain) => (
           <div key={strain.strain_id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-start mb-3">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 {strain.strain_identifier}
+                {strain.is_duplicate && (
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800 font-medium">
+                        Дубликат
+                    </span>
+                )}
               </h3>
               <span className={`px-2 py-1 text-xs rounded-full ${
                 strain.is_active 

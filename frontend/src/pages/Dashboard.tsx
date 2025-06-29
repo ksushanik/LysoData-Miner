@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
-import { getDashboardStats } from '../services/api';
-import { Server, Dna, TestTube2, Shapes, Library } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Beaker, ClipboardList, Dna, FileText, FlaskConical, HardDrive, Library, LocateFixed, LucideProps, Network, PencilRuler, Microscope, GitBranch, Archive } from 'lucide-react';
+import { getDashboardStats } from '@/services/api';
+import StatCard from '@/components/StatCard';
+import NavCard from '@/components/NavCard';
 
 interface Stats {
   total_species: number;
@@ -8,29 +10,12 @@ interface Stats {
   total_test_results: number;
   total_categories: number;
   total_sources: number;
+  total_collection_numbers: number;
 }
 
-interface StatCardProps {
-    icon: React.ReactNode;
-    title: string;
-    value: number | undefined | null;
-    colorClass: string;
-}
-
-const StatCard = ({ icon, title, value, colorClass }: StatCardProps) => (
-    <div className={`bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 border-l-4 ${colorClass}`}>
-        <div className="text-3xl">{icon}</div>
-        <div>
-            <p className="text-sm font-medium text-gray-500">{title}</p>
-            <p className="text-2xl font-bold">{value !== null && value !== undefined ? value.toLocaleString() : '...'}</p>
-        </div>
-    </div>
-);
-
-export default function Dashboard() {
+const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -38,9 +23,8 @@ export default function Dashboard() {
         setLoading(true);
         const data = await getDashboardStats();
         setStats(data);
-      } catch (err) {
-        setError('Не удалось загрузить статистику.');
-        console.error(err);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
       } finally {
         setLoading(false);
       }
@@ -49,45 +33,62 @@ export default function Dashboard() {
     fetchStats();
   }, []);
 
-  if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
-  }
+  const statItems: {
+    title: string;
+    value: keyof Stats;
+    Icon: React.ForwardRefExoticComponent<Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>>;
+    colorClass: string;
+  }[] = [
+    { title: 'Всего видов', value: 'total_species', Icon: Dna, colorClass: 'border-blue-500' },
+    { title: 'Всего штаммов', value: 'total_strains', Icon: Microscope, colorClass: 'border-green-500' },
+    { title: 'Результатов тестов', value: 'total_test_results', Icon: FileText, colorClass: 'border-indigo-500' },
+    { title: 'Категорий тестов', value: 'total_categories', Icon: Library, colorClass: 'border-purple-500' },
+    { title: 'Источников', value: 'total_sources', Icon: Archive, colorClass: 'border-yellow-500' },
+    { title: 'Номеров в коллекциях', value: 'total_collection_numbers', Icon: GitBranch, colorClass: 'border-pink-500' },
+  ];
+
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-full">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">Обзор базы данных</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <StatCard 
-                icon={<Dna className="text-blue-500" />} 
-                title="Всего видов" 
-                value={stats?.total_species} 
-                colorClass="border-blue-500" 
+    <div className="container mx-auto p-4 md:p-6 lg:p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Обзор базы данных</h1>
+        <p className="text-gray-500">Ключевые метрики и быстрый доступ к основным разделам системы.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+        {statItems.map(({ title, value, Icon, colorClass }) => (
+          <StatCard
+            key={title}
+            title={title}
+            value={loading || stats === null ? undefined : stats[value]}
+            Icon={Icon}
+            colorClass={colorClass}
+            loading={loading}
+          />
+        ))}
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Основные разделы</h2>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <NavCard 
+                to="/strains"
+                Icon={PencilRuler}
+                title="Обзор штаммов"
+                description="Поиск и фильтрация по всей базе данных штаммов."
+                className="before:bg-sky-500"
             />
-            <StatCard 
-                icon={<TestTube2 className="text-green-500" />} 
-                title="Всего штаммов" 
-                value={stats?.total_strains} 
-                colorClass="border-green-500"
-            />
-            <StatCard 
-                icon={<Server className="text-indigo-500" />} 
-                title="Результатов тестов" 
-                value={stats?.total_test_results}
-                colorClass="border-indigo-500"
-            />
-            <StatCard 
-                icon={<Shapes className="text-purple-500" />} 
-                title="Категорий тестов" 
-                value={stats?.total_categories}
-                colorClass="border-purple-500"
-            />
-             <StatCard 
-                icon={<Library className="text-yellow-500" />} 
-                title="Источников" 
-                value={stats?.total_sources}
-                colorClass="border-yellow-500"
+            <NavCard 
+                to="/identify"
+                Icon={LocateFixed}
+                title="Идентификация штамма"
+                description="Определение наиболее вероятных видов по результатам тестов."
+                className="before:bg-teal-500"
             />
         </div>
+      </div>
     </div>
   );
-} 
+};
+
+export default Dashboard; 

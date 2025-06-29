@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { Strain, TestResult, CollectionNumber } from 'types';
-import { fetchStrainDetails } from 'services/api';
+import { Strain, TestResult, CollectionNumber } from '@/types';
+import { fetchStrainDetails } from '@/services/api';
 import { ArrowLeft, Dna, Beaker, Thermometer, Droplet, Microscope, Ruler, FlaskConical, TestTube, ChevronsRight } from 'lucide-react';
 
 const DetailCard = ({ title, children, icon }: { title: string, children: React.ReactNode, icon?: React.ReactNode }) => (
@@ -116,11 +116,14 @@ const StrainDetail: React.FC = () => {
     if (!strain) return <div className="text-center py-10">Штамм не найден.</div>;
 
     const { strain: strainData } = strain;
+    const backUrl = strainData.scientific_name 
+        ? `/strains/species/${encodeURIComponent(strainData.scientific_name)}` 
+        : '/strains';
 
     return (
         <div className="container mx-auto p-4 md:p-8 bg-gray-50 min-h-screen">
             <div className="mb-8">
-                <Link to={speciesNameFromState ? `/strains/species/${encodeURIComponent(speciesNameFromState)}` : '/strains'} className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+                <Link to={backUrl} className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
                     <ArrowLeft className="mr-2" size={18} />
                     Назад к списку штаммов
                 </Link>

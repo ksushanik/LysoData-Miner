@@ -79,7 +79,7 @@ app = FastAPI(
 # CORS middleware for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins_list,
+    allow_origins=settings.allowed_origins_list + ["http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -90,7 +90,7 @@ app.include_router(health.router, prefix="/api", tags=["System Health"])
 app.include_router(strains.router, prefix="/api", tags=["Strains"])
 app.include_router(tests.router, prefix="/api", tags=["Tests"])
 app.include_router(identification.router, prefix="/api", tags=["Identification"])
-app.include_router(stats.router, prefix="/api", tags=["Statistics"])
+app.include_router(stats.router, prefix="/api/stats", tags=["Statistics"])
 
 
 @app.get("/", summary="Root endpoint", tags=["Root"])

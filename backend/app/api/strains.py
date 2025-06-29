@@ -35,12 +35,19 @@ async def list_strains(
     source_id: Optional[int] = Query(None, description="Filter by data source ID"),
     active_only: Optional[bool] = Query(True, description="Return only active strains"),
     scientific_name: Optional[str] = Query(None, description="Filter by scientific name"),
+    include_duplicates: bool = Query(False, description="Include strains marked as duplicates"),
     db: AsyncSession = Depends(get_database_session)
 ):
     """Get list of bacterial strains with optional filtering and search"""
     try:
+        # Subquery to find master strains (those that have duplicates pointing to them)
+        master_strain_subquery = select(Strain.master_strain_id).where(Strain.master_strain_id.isnot(None)).distinct().alias("master_ids")
+
         # Build base query with relationships
-        query = select(Strain).options(
+        query = select(
+            Strain,
+            (Strain.strain_id.in_(select(master_strain_subquery.c.master_strain_id))).label("is_master")
+        ).options(
             selectinload(Strain.data_source),
             selectinload(Strain.collections).selectinload(StrainCollection.collection_number)
         )
@@ -57,6 +64,9 @@ async def list_strains(
         if scientific_name:
             filters.append(Strain.scientific_name == scientific_name)
         
+        if not include_duplicates:
+            filters.append(Strain.is_duplicate == False)
+        
         # Apply search
         if search:
             search_term = f"%{search}%"
@@ -71,28 +81,27 @@ async def list_strains(
         if filters:
             query = query.where(and_(*filters))
         
-        # Get total count for pagination
-        count_query = select(func.count(Strain.strain_id))
-        if filters:
-            count_query = count_query.where(and_(*filters))
-        
+        # --- REVISED COUNT LOGIC ---
+        # Build count query from the main query to ensure filters are consistent
+        count_query = select(func.count()).select_from(query.order_by(None).alias("main_query"))
         total_result = await db.execute(count_query)
-        total_count = total_result.scalar()
-        
-        # Apply pagination and ordering
+        total_count = total_result.scalar_one()
+
+        # Apply pagination and ordering to the main query
         query = query.order_by(Strain.strain_identifier).offset(skip).limit(limit)
         
         # Execute query
         result = await db.execute(query)
-        strains = result.scalars().all()
+        strains_with_master_flag = result.all()
         
-        # Format response
-        strain_list = []
-        for strain in strains:
-            strain_data = {
+        # --- REVISED RESPONSE FORMATTING ---
+        strain_list = [
+            {
                 "strain_id": strain.strain_id,
                 "strain_identifier": strain.strain_identifier,
                 "scientific_name": strain.scientific_name,
+                "is_duplicate": strain.is_duplicate,
+                "is_master": is_master and not strain.is_duplicate,
                 "common_name": strain.common_name,
                 "description": strain.description,
                 "isolation_source": strain.isolation_source,
@@ -103,19 +112,20 @@ async def list_strains(
                 "data_source": {
                     "source_id": strain.data_source.source_id,
                     "source_name": strain.data_source.source_name,
-                    "source_type": strain.data_source.source_type
+                    "source_type": strain.data_source.source_type,
                 } if strain.data_source else None,
                 "collection_numbers": [
                     {
                         "collection_code": sc.collection_number.collection_code,
                         "collection_number": sc.collection_number.collection_number,
                         "full_identifier": sc.collection_number.full_identifier,
-                        "is_primary": sc.is_primary
+                        "is_primary": sc.is_primary,
                     }
                     for sc in strain.collections
-                ] if strain.collections else []
+                ] if strain.collections else [],
             }
-            strain_list.append(strain_data)
+            for strain, is_master in strains_with_master_flag
+        ]
         
         return {
             "strains": strain_list,
