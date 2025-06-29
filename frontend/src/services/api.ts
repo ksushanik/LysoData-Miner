@@ -14,9 +14,6 @@ export interface StrainPayload {
   isolation_location?: string;
   isolation_date?: string;
   source_id?: number;
-  gc_content_min?: number;
-  gc_content_max?: number;
-  gc_content_optimal?: number;
   notes?: string;
   is_active?: boolean;
   test_results?: any[];

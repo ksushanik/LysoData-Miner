@@ -21,9 +21,6 @@ export default function EditStrainPage() {
           isolation_source: s.isolation_source,
           isolation_location: s.isolation_location,
           isolation_date: s.isolation_date,
-          gc_content_min: undefined,
-          gc_content_max: undefined,
-          gc_content_optimal: undefined,
           notes: s.notes,
           is_active: s.is_active
         })

@@ -19,9 +19,6 @@ const schema = z.object({
   isolation_source: z.string().optional(),
   isolation_location: z.string().optional(),
   isolation_date: z.string().optional(),
-  gc_content_min: z.coerce.number().optional(),
-  gc_content_max: z.coerce.number().optional(),
-  gc_content_optimal: z.coerce.number().optional(),
   notes: z.string().optional(),
   is_active: z.boolean().optional()
 })
@@ -195,20 +192,6 @@ export default function StrainForm({ initial = {}, onSubmit, submitLabel = 'Со
         <div>
           <label className="block text-sm font-medium mb-1">Дата изоляции</label>
           <input type="date" {...register('isolation_date')} className="border px-3 py-2 rounded" />
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">GC min %</label>
-            <input type="number" step="0.01" {...register('gc_content_min')} className="w-full border px-3 py-2 rounded" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">GC max %</label>
-            <input type="number" step="0.01" {...register('gc_content_max')} className="w-full border px-3 py-2 rounded" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">GC opt %</label>
-            <input type="number" step="0.01" {...register('gc_content_optimal')} className="w-full border px-3 py-2 rounded" />
-          </div>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Примечания</label>
