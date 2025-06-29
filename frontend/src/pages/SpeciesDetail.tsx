@@ -25,8 +25,8 @@ interface StrainResponse {
 }
 
 export default function SpeciesDetail() {
-  const { scientificName } = useParams<{ scientificName: string }>()
-  const decodedName = decodeURIComponent(scientificName || '')
+  const { name } = useParams<{ name: string }>()
+  const decodedName = decodeURIComponent(name || '')
 
   const [strains, setStrains] = useState<Strain[]>([])
   const [loading, setLoading] = useState(true)
@@ -111,7 +111,7 @@ export default function SpeciesDetail() {
             </div>
 
             <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
-              <Link to={`/strains/${strain.strain_id}`} state={{ scientificName: decodedName }} className="text-primary hover:text-primary-dark text-sm font-semibold transition-colors">
+              <Link to={`/strains/${strain.strain_id}`} state={{ name: decodedName }} className="text-primary hover:text-primary-dark text-sm font-semibold transition-colors">
                 View Details →
               </Link>
               <button
