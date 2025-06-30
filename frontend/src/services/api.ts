@@ -51,8 +51,8 @@ export const fetchStrainDetails = async (strainId: string): Promise<StrainDetail
 
 export const createStrain = async (data: StrainFormValues) => {
   try {
-    const response = await api.post('/strains/create/', data);
-    return response.data;
+    const response = await api.post('/strains/', data);
+    return response.data.strain_id;
   } catch (error: any) {
     const errorMsg = error.response?.data?.detail || 'Failed to create strain';
     throw new Error(errorMsg);

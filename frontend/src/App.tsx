@@ -20,6 +20,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/strains" element={<SpeciesBrowser />} />
         <Route path="/species" element={<Navigate to="/strains" replace />} />
+        <Route path="/strains/new" element={<CreateStrainPage />} />
         <Route path="/strains/species/:name" element={<SpeciesDetail />} />
         <Route path="/strains/:strainId" element={<StrainDetail />} />
         <Route path="/strains/:strainId/edit" element={<EditStrainPage />} />
