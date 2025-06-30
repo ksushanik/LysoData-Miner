@@ -138,7 +138,7 @@ const StrainDetail: React.FC = () => {
                       onClick={async () => {
                         if (confirm('Удалить этот штамм?')) {
                           try {
-                            await fetch(`http://localhost:8000/api/strains/${strainId}`, { method: 'DELETE' })
+                            await fetch(`/api/strains/${strainId}`, { method: 'DELETE' })
                             alert('Штамм удалён')
                             window.location.href = '/strains'
                           } catch (e) {

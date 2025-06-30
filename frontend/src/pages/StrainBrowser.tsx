@@ -52,7 +52,7 @@ export default function StrainBrowser() {
         searchParams.append('search', search)
       }
 
-      const response = await fetch(`http://localhost:8000/api/strains/?${searchParams}`)
+      const response = await fetch(`/api/strains/?${searchParams}`)
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

@@ -1,0 +1,159 @@
+# 🧬 LysoData-Miner Production Deployment Makefile
+# =================================================
+
+.PHONY: help prod-up prod-down prod-build prod-restart prod-logs prod-status prod-backup prod-clean
+
+# Colors
+BLUE := \033[34m
+GREEN := \033[32m
+YELLOW := \033[33m
+RED := \033[31m
+RESET := \033[0m
+
+# Docker Compose file
+COMPOSE_FILE := docker-compose.production.yml
+ENV_FILE := .env.production
+
+help: ## Show production deployment commands
+	@echo "$(BLUE)🧬 LysoData-Miner Production Deployment$(RESET)"
+	@echo "$(BLUE)====================================$(RESET)"
+	@echo ""
+	@echo "$(GREEN)Quick Commands:$(RESET)"
+	@echo "  make prod-up      # 🚀 Start all services (build if needed)"
+	@echo "  make prod-down    # 🛑 Stop all services"
+	@echo "  make prod-restart # 🔄 Restart all services"
+	@echo "  make prod-status  # 📊 Show services status"
+	@echo "  make prod-logs    # 📋 Show live logs"
+	@echo "  make prod-backup  # 💾 Create database backup"
+	@echo ""
+	@echo "$(GREEN)Available commands:$(RESET)"
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ { printf "  $(YELLOW)%-15s$(RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
+# Check environment file
+check-env:
+	@if [ ! -f $(ENV_FILE) ]; then \
+		echo "$(YELLOW)⚠️  $(ENV_FILE) not found, copying from example...$(RESET)"; \
+		cp env.production.example $(ENV_FILE); \
+		echo "$(GREEN)✅ Created $(ENV_FILE) - please review and update passwords!$(RESET)"; \
+	fi
+
+# Production commands
+prod-up: check-env ## 🚀 Start all production services
+	@echo "$(BLUE)🚀 Starting LysoData-Miner in production mode...$(RESET)"
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) up -d --build
+	@echo ""
+	@echo "$(GREEN)✅ Services starting up!$(RESET)"
+	@echo "$(YELLOW)📊 Frontend: http://localhost:$$(grep WEB_PORT $(ENV_FILE) | cut -d'=' -f2 || echo 3000)$(RESET)"
+	@echo "$(YELLOW)🔌 Backend API: http://localhost:8000$(RESET)"
+	@echo "$(YELLOW)🗄️  Database: localhost:$$(grep DB_PORT $(ENV_FILE) | cut -d'=' -f2 || echo 5434)$(RESET)"
+	@echo ""
+	@echo "$(BLUE)💡 Use 'make prod-logs' to see initialization progress$(RESET)"
+
+prod-down: ## 🛑 Stop all production services
+	@echo "$(BLUE)🛑 Stopping LysoData-Miner production services...$(RESET)"
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) down
+	@echo "$(GREEN)✅ Services stopped$(RESET)"
+
+prod-build: ## 🏗️ Build all Docker images
+	@echo "$(BLUE)🏗️ Building LysoData-Miner Docker images...$(RESET)"
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) build --no-cache
+	@echo "$(GREEN)✅ Build completed$(RESET)"
+
+prod-restart: ## 🔄 Restart all production services
+	@echo "$(BLUE)🔄 Restarting LysoData-Miner production services...$(RESET)"
+	@$(MAKE) prod-down
+	@sleep 2
+	@$(MAKE) prod-up
+
+prod-logs: ## 📋 Show live logs from all services
+	@echo "$(BLUE)📋 Showing LysoData-Miner production logs...$(RESET)"
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs -f
+
+prod-logs-backend: ## 📋 Show backend logs only
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs -f backend
+
+prod-logs-frontend: ## 📋 Show frontend logs only
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs -f frontend
+
+prod-logs-init: ## 📋 Show initialization logs
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs data-init
+
+prod-status: ## 📊 Show services status and health
+	@echo "$(BLUE)📊 LysoData-Miner Production Status$(RESET)"
+	@echo "$(BLUE)================================$(RESET)"
+	@echo ""
+	@echo "$(GREEN)🐳 Docker Services:$(RESET)"
+	@docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) ps
+	@echo ""
+	@echo "$(GREEN)🏥 Health Checks:$(RESET)"
+	@echo -n "Backend API: "
+	@curl -sf http://localhost:8000/api/health/ >/dev/null && echo "$(GREEN)✅ Healthy$(RESET)" || echo "$(RED)❌ Not responding$(RESET)"
+	@echo -n "Frontend: "
+	@WEB_PORT=$$(grep WEB_PORT $(ENV_FILE) | cut -d'=' -f2 || echo 3000); \
+	curl -sf http://localhost:$$WEB_PORT >/dev/null && echo "$(GREEN)✅ Healthy$(RESET)" || echo "$(RED)❌ Not responding$(RESET)"
+	@echo -n "Database: "
+	@DB_PORT=$$(grep DB_PORT $(ENV_FILE) | cut -d'=' -f2 || echo 5434); \
+	docker exec lysodata_db pg_isready -U lysobacter_user -d lysobacter_db >/dev/null 2>&1 && echo "$(GREEN)✅ Healthy$(RESET)" || echo "$(RED)❌ Not responding$(RESET)"
+
+prod-backup: ## 💾 Create database backup
+	@echo "$(BLUE)💾 Creating database backup...$(RESET)"
+	@mkdir -p ./backups
+	@BACKUP_FILE="./backups/backup_$$(date +%Y%m%d_%H%M%S).sql.gz"
+	@docker exec lysodata_db pg_dump -U lysobacter_user lysobacter_db | gzip > $$BACKUP_FILE
+	@echo "$(GREEN)✅ Backup created: $$BACKUP_FILE$(RESET)"
+
+prod-stats: ## 📊 Show database statistics
+	@echo "$(BLUE)📊 Database Statistics$(RESET)"
+	@echo "$(BLUE)==================$(RESET)"
+	@docker exec lysodata_db psql -U lysobacter_user -d lysobacter_db -c "
+		SELECT 
+		  'Strains: ' || COUNT(*) as stats FROM lysobacter.strains
+		UNION ALL
+		SELECT 
+		  'Categories: ' || COUNT(*) FROM lysobacter.test_categories
+		UNION ALL
+		SELECT 
+		  'Tests: ' || COUNT(*) FROM lysobacter.tests
+		UNION ALL
+		SELECT 
+		  'Boolean results: ' || COUNT(*) FROM lysobacter.test_results_boolean
+		UNION ALL
+		SELECT 
+		  'Numeric results: ' || COUNT(*) FROM lysobacter.test_results_numeric;
+	" -t
+
+prod-shell-db: ## 💻 Connect to database shell
+	@echo "$(BLUE)💻 Connecting to database shell...$(RESET)"
+	docker exec -it lysodata_db psql -U lysobacter_user -d lysobacter_db
+
+prod-shell-backend: ## 💻 Connect to backend container shell
+	@echo "$(BLUE)💻 Connecting to backend container...$(RESET)"
+	docker exec -it lysodata_api sh
+
+prod-shell-frontend: ## 💻 Connect to frontend container shell
+	@echo "$(BLUE)💻 Connecting to frontend container...$(RESET)"
+	docker exec -it lysodata_web sh
+
+prod-clean: ## 🧹 Clean up Docker resources
+	@echo "$(BLUE)🧹 Cleaning up Docker resources...$(RESET)"
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) down -v --rmi all --remove-orphans
+	@echo "$(GREEN)✅ Cleanup completed$(RESET)"
+
+prod-reset: ## 🔄 Full reset - stop, clean, rebuild, start
+	@echo "$(BLUE)🔄 Full production reset...$(RESET)"
+	@$(MAKE) prod-down
+	@$(MAKE) prod-clean
+	@$(MAKE) prod-build
+	@$(MAKE) prod-up
+	@echo "$(GREEN)✅ Full reset completed$(RESET)"
+
+# Initialize from existing backup
+prod-restore: ## 🔄 Restore database from backup (BACKUP_FILE=path/to/backup.sql.gz)
+	@if [ -z "$(BACKUP_FILE)" ]; then \
+		echo "$(RED)❌ Please specify BACKUP_FILE variable$(RESET)"; \
+		echo "$(YELLOW)Example: make prod-restore BACKUP_FILE=./backups/backup_20250629_120000.sql.gz$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)🔄 Restoring database from $(BACKUP_FILE)...$(RESET)"
+	@gunzip -c $(BACKUP_FILE) | docker exec -i lysodata_db psql -U lysobacter_user -d lysobacter_db
+	@echo "$(GREEN)✅ Database restored$(RESET)" 

@@ -62,12 +62,12 @@ export default function IdentificationTool() {
       try {
         setLoading(true)
         
-        const categoriesResponse = await fetch('http://localhost:8000/api/tests/categories')
+        const categoriesResponse = await fetch('/api/tests/categories')
         if (!categoriesResponse.ok) throw new Error(`Failed to fetch categories: ${categoriesResponse.statusText}`)
         const categoriesData = await categoriesResponse.json()
         setCategories(categoriesData.categories || [])
 
-        const testsResponse = await fetch('http://localhost:8000/api/tests/')
+        const testsResponse = await fetch('/api/tests/')
         if (!testsResponse.ok) throw new Error(`Failed to fetch tests: ${testsResponse.statusText}`)
         const testsData = await testsResponse.json()
         const fetchedTests = testsData.tests || []
@@ -77,7 +77,7 @@ export default function IdentificationTool() {
         const optionsPromises = fetchedTests
           .filter((test: Test) => test.test_type === 'numeric' || test.test_type === 'text')
           .map((test: Test) => 
-            fetch(`http://localhost:8000/api/tests/${test.test_id}/options`)
+            fetch(`/api/tests/${test.test_id}/options`)
               .then(res => res.ok ? res.json() : Promise.resolve({ options: [] }))
               .then(data => ({ test_id: test.test_id, options: data.options }))
           );
@@ -116,7 +116,7 @@ export default function IdentificationTool() {
     setError(null)
 
     try {
-      const response = await fetch('http://localhost:8000/api/identification/identify', {
+      const response = await fetch('/api/identification/identify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

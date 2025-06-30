@@ -17,7 +17,7 @@ RESET='\033[0m'
 
 # Configuration
 WATCH_INTERVAL=30  # seconds
-DEPLOY_SCRIPT="./scripts/deployment/deploy_to_4feb.sh"
+DEPLOY_SCRIPT="./scripts/deploy_to_4feb.sh"
 LAST_COMMIT_FILE=".last_auto_deploy_commit"
 LOG_FILE="auto_deploy.log"
 PID_FILE="auto_deploy.pid"

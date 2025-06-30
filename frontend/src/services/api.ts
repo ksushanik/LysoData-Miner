@@ -4,10 +4,12 @@ import { StrainFormValues } from '../components/StrainForm'
 import axios from 'axios';
 
 // Автоматическое определение API URL
-const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const isDevelopment = (window.location.hostname === 'localhost' || 
+                      window.location.hostname === '127.0.0.1') && 
+                      window.location.port === '3000'; // Только Vite dev server
 const API_BASE_URL = isDevelopment 
-  ? 'http://localhost:8000/api'  // Development
-  : '/api';                      // Production (относительный путь)
+  ? 'http://localhost:8000/api'  // Development (Vite dev server)
+  : '/api';                      // Production (относительный путь через Nginx)
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -73,4 +75,27 @@ export const fetchTestCategories = async (includeTests: boolean = true): Promise
 export const getDashboardStats = async () => {
   const res = await api.get('/stats/');
   return res.data;
-} 
+}
+
+export const fetchSpecies = async () => {
+  const res = await api.get('/species');
+  return res.data;
+}
+
+// Универсальная функция для API запросов с правильным URL
+export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return response.json();
+}; 

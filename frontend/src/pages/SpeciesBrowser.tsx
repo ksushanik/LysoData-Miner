@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { fetchSpecies as fetchSpeciesAPI } from '../services/api'
 
 interface Species {
   scientific_name: string
@@ -15,11 +16,7 @@ export default function SpeciesBrowser() {
   const fetchSpecies = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/species')
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
+      const data = await fetchSpeciesAPI()
       setSpeciesList(data.species)
       setError(null)
     } catch (err) {

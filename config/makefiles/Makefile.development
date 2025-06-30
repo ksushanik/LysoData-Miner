@@ -1,25 +1,100 @@
-# LysoData-Miner Main Makefile
-# Consolidated project management
+# 🧬 LysoData-Miner Development Makefile
+# =====================================
+# Команды для локальной разработки и тестирования.
 
-.DEFAULT_GOAL := help
+.PHONY: help setup db-start dev-up dev-down dev-restart dev-status dev-logs \
+        dev-backend dev-frontend dev-shell-backend dev-shell-frontend dev-shell-db
 
-# Include specialized makefiles
-include config/makefiles/Makefile.development
-include config/makefiles/Makefile.production  
-include config/makefiles/Makefile.cicd
+# Цвета вывода
+BLUE  := \033[34m
+GREEN := \033[32m
+YELLOW:= \033[33m
+RED   := \033[31m
+RESET := \033[0m
 
-help: ## Show this help message
-	@echo "🧬 LysoData-Miner Project Management"
-	@echo "=================================="
+# Файлы конфигурации
+DEV_COMPOSE_FILE := config/docker/docker-compose.dev.yml
+ENV_FILE_DEV     := .env.dev
+
+# Выбираем docker compose (плагин) вместо устаревшего docker-compose
+DC := docker compose
+
+help: ## Показать помощь по командам разработки
+	@echo "$(BLUE)🧬 LysoData-Miner Development$(RESET)"
+	@echo "$(BLUE)================================$(RESET)"
 	@echo ""
-	@echo "📋 Available commands:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo "$(GREEN)🚀 Быстрый старт:$(RESET)"
+	@echo "  make db-start && make dev-backend && make dev-frontend"
 	@echo ""
-	@echo "📚 Documentation: docs/guides/"
-	@echo "🚀 Quick start: make dev-setup"
+	@echo "$(GREEN)Доступные команды:$(RESET)"
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ { printf "  $(YELLOW)%-18s$(RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
-dev-setup: ## Setup development environment
-	@echo "🔧 Setting up development environment..."
-	@make -f config/makefiles/Makefile.development setup
+# -----------------------------------------------------
+# ⛏  Setup
+# -----------------------------------------------------
+setup: ## Подготовить окружение (создание .env.dev при отсутствии)
+	@if [ ! -f $(ENV_FILE_DEV) ]; then \
+		 echo "$(YELLOW)⚠️  $(ENV_FILE_DEV) не найден, копирую из примера...$(RESET)"; \
+		 if [ -f env.dev.example ]; then cp env.dev.example $(ENV_FILE_DEV); else touch $(ENV_FILE_DEV); fi; \
+		 echo "$(GREEN)✅ $(ENV_FILE_DEV) создан. Проверьте параметры!$(RESET)"; \
+	fi
 
-.PHONY: help dev-setup
+# -----------------------------------------------------
+# 🐘 Database
+# -----------------------------------------------------
+
+db-start: ## Запустить только базу данных (и pgAdmin) в Docker
+	@echo "$(BLUE)🐘 Запуск PostgreSQL для разработки...$(RESET)"
+	$(DC) -f $(DEV_COMPOSE_FILE) --env-file $(ENV_FILE_DEV) up -d postgres pgadmin
+
+# -----------------------------------------------------
+# 🛠  Stack management
+# -----------------------------------------------------
+
+dev-up: ## Запустить весь стек (DB + backend + frontend)
+	@echo "$(BLUE)🚀 Запуск всех сервисов разработки...$(RESET)"
+	$(DC) -f $(DEV_COMPOSE_FILE) --env-file $(ENV_FILE_DEV) up -d
+	@$(MAKE) dev-status
+
+dev-down: ## Остановить все сервисы разработки
+	@echo "$(BLUE)🛑 Остановка сервисов разработки...$(RESET)"
+	$(DC) -f $(DEV_COMPOSE_FILE) --env-file $(ENV_FILE_DEV) down
+
+
+dev-restart: ## Перезапустить все сервисы разработки
+	@$(MAKE) dev-down
+	@$(MAKE) dev-up
+
+
+dev-status: ## Показать статус контейнеров
+	@echo "$(BLUE)📊 Статус сервисов разработки$(RESET)"
+	$(DC) -f $(DEV_COMPOSE_FILE) --env-file $(ENV_FILE_DEV) ps
+
+
+dev-logs: ## Показать логи всех сервисов (follow)
+	@echo "$(BLUE)📋 Логи сервисов разработки$(RESET)"
+	$(DC) -f $(DEV_COMPOSE_FILE) --env-file $(ENV_FILE_DEV) logs -f
+
+# -----------------------------------------------------
+# 🎯 Individual services
+# -----------------------------------------------------
+
+dev-backend: ## Запустить/перезапустить только backend
+	@echo "$(BLUE)🐍 Запуск backend сервиса...$(RESET)"
+	$(DC) -f $(DEV_COMPOSE_FILE) --env-file $(ENV_FILE_DEV) up -d backend
+
+
+dev-frontend: ## Запустить/перезапустить только frontend
+	@echo "$(BLUE)⚛️  Запуск frontend сервиса...$(RESET)"
+	$(DC) -f $(DEV_COMPOSE_FILE) --env-file $(ENV_FILE_DEV) up -d frontend
+
+# shells
+
+dev-shell-backend: ## Подключиться к shell контейнера backend
+	$(DC) -f $(DEV_COMPOSE_FILE) exec backend sh
+
+dev-shell-frontend: ## Подключиться к shell контейнера frontend
+	$(DC) -f $(DEV_COMPOSE_FILE) exec frontend sh
+
+dev-shell-db: ## Подключиться к psql в контейнере postgres
+	$(DC) -f $(DEV_COMPOSE_FILE) exec postgres psql -U $$POSTGRES_USER -d $$POSTGRES_DB

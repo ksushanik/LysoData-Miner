@@ -44,7 +44,7 @@ export default function SpeciesDetail() {
         if (includeDuplicates) {
           params.append('include_duplicates', 'true')
         }
-        const response = await fetch(`http://localhost:8000/api/strains/?${params}`)
+        const response = await fetch(`/api/strains/?${params}`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }

@@ -16,9 +16,9 @@ CYAN := \033[36m
 RESET := \033[0m
 
 # Configuration
-DEPLOY_SCRIPT := ./scripts/deployment/deploy_to_4feb.sh
-WATCH_SCRIPT := ./scripts/deployment/watch_and_deploy.sh
-WEBHOOK_SCRIPT := ./scripts/deployment/webhook_server.py
+DEPLOY_SCRIPT := ./scripts/deploy_to_4feb.sh
+WATCH_SCRIPT := ./scripts/watch_and_deploy.sh
+WEBHOOK_SCRIPT := ./scripts/webhook_server.py
 WEBHOOK_PORT := 9000
 
 help: ## Show CI/CD management commands
@@ -202,10 +202,10 @@ cicd-status: ## 📊 Show full CI/CD status
 	@[ -x $(DEPLOY_SCRIPT) ] && echo "$(GREEN)✅ Executable$(RESET)" || echo "$(RED)❌ Not executable$(RESET)"
 	@echo ""
 	@echo "$(GREEN)👁️  Auto-Deploy Watcher:$(RESET)"
-	@$(MAKE) -f config/makefiles/Makefile.cicd -s watch-status || echo "  $(RED)❌ Status check failed$(RESET)"
+	@$(MAKE) -f Makefile.cicd -s watch-status || echo "  $(RED)❌ Status check failed$(RESET)"
 	@echo ""
 	@echo "$(GREEN)🔗 Webhook Server:$(RESET)"
-	@$(MAKE) -f config/makefiles/Makefile.cicd -s webhook-status || echo "  $(RED)❌ Status check failed$(RESET)"
+	@$(MAKE) -f Makefile.cicd -s webhook-status || echo "  $(RED)❌ Status check failed$(RESET)"
 	@echo ""
 	@echo "$(GREEN)📊 Remote Server Status:$(RESET)"
 	@echo -n "  Connection: "

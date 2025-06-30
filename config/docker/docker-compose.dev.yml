@@ -30,8 +30,8 @@ services:
   # FastAPI Backend
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
+      context: ../../backend
+      dockerfile: Dockerfile
     container_name: lysodata_backend
     restart: unless-stopped
     environment:
@@ -45,7 +45,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
+      - ../../backend:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,17 +58,17 @@ services:
   # React Frontend
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+      context: ../../frontend
+      dockerfile: Dockerfile
     container_name: lysodata_frontend
     restart: unless-stopped
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:8000
     ports:
-      - "3000:3000"
+      - "3000:80"
     volumes:
-      - ./frontend:/app
+      - ../../frontend:/app
       - /app/node_modules
     depends_on:
       - backend

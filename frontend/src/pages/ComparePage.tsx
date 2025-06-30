@@ -21,7 +21,7 @@ export default function ComparePage() {
       if (selected.length < 2) return;
       setLoading(true)
       try {
-        const res = await fetch('http://localhost:8000/api/strains/batch', {
+        const res = await fetch('/api/strains/batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ strain_ids: selected })

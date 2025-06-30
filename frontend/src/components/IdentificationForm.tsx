@@ -26,7 +26,7 @@ export const IdentificationForm: React.FC<IdentificationFormProps> = ({ onResult
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/tests/categories');
+        const response = await fetch('/api/tests/categories');
         if (!response.ok) throw new Error('Ошибка загрузки категорий');
         const data = await response.json();
         // API возвращает объект с полем categories
@@ -49,7 +49,7 @@ export const IdentificationForm: React.FC<IdentificationFormProps> = ({ onResult
 
     const loadTests = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/tests/?category_id=${selectedCategory}`);
+        const response = await fetch(`/api/tests/?category_id=${selectedCategory}`);
         if (!response.ok) throw new Error('Ошибка загрузки тестов');
         const data = await response.json();
         // API возвращает объект с полем tests
@@ -135,7 +135,7 @@ export const IdentificationForm: React.FC<IdentificationFormProps> = ({ onResult
         full_object: tv
       })));
 
-      const response = await fetch('http://localhost:8000/api/identification/identify', {
+      const response = await fetch('/api/identification/identify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

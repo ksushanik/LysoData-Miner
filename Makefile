@@ -1,109 +1,118 @@
-# LysoData-Miner Main Makefile
-# Consolidated project management
+# ============================================================================
+# 🧬 LysoData-Miner – SIMPLE ROOT MAKEFILE
+# ----------------------------------------------------------------------------
+# Один файл → понятное управление.  Основные группы команд:
+#   DEV  – локальная разработка (docker-compose.dev)
+#   PROD – продакшн (docker-compose.production)
+# ----------------------------------------------------------------------------
+#   make help            – эта справка
+#   make dev-start       – запустить стек разработки (DB+backend+frontend)
+#   make dev-stop        – остановить dev-контейнеры
+#   make dev-logs        – логи dev
+#   make prod-start      – запустить продакшн-стек
+#   make prod-stop       – остановить продакшн-стек
+#   make prod-logs       – логи продакшн
+#   make db-backup       – создать резерв базы (prod)
+#   make db-restore BACKUP=path.sql.gz – восстановить базу (prod)
+# ----------------------------------------------------------------------------
+# Подробные Makefile'ы из config/ остаются для продвинутых задач, но не
+# импортируются здесь, чтобы не перегружать вывод help.
+# ============================================================================
 
-.DEFAULT_GOAL := help
+.PHONY: help dev-start dev-stop dev-backend dev-frontend dev-status dev-logs prod-start prod-stop prod-build prod-restart prod-status prod-logs db-backup db-restore dev-env
 
-# Colors
-BLUE := \033[34m
-GREEN := \033[32m
-YELLOW := \033[33m
-RED := \033[31m
-CYAN := \033[36m
-RESET := \033[0m
+##### �� Базовые переменные ###################################################
+# Используем docker compose (плагин Docker >= 20.10)
+DC ?= docker compose
 
-help: ## Show this help message
-	@echo "$(BLUE)🧬 LysoData-Miner Project Management$(RESET)"
-	@echo "$(BLUE)==================================$(RESET)"
-	@echo ""
-	@echo "$(GREEN)📋 Main Commands:$(RESET)"
-	@echo "  $(CYAN)make dev-setup$(RESET)           # Setup development environment"
-	@echo "  $(CYAN)make dev-start$(RESET)           # Start development servers"
-	@echo "  $(CYAN)make dev-stop$(RESET)            # Stop development servers"
-	@echo "  $(CYAN)make deploy$(RESET)              # Deploy to production (4feb)"
-	@echo ""
-	@echo "$(GREEN)🚀 CI/CD Commands:$(RESET)"
-	@echo "  $(CYAN)make cicd-help$(RESET)           # Show CI/CD commands"
-	@echo "  $(CYAN)make cicd-deploy$(RESET)         # Deploy using CI/CD system"
-	@echo "  $(CYAN)make cicd-status$(RESET)         # Show CI/CD system status"
-	@echo ""
-	@echo "$(GREEN)📚 Documentation:$(RESET)"
-	@echo "  📖 Project structure: $(YELLOW)PROJECT_STRUCTURE.md$(RESET)"
-	@echo "  📖 Quick start guide: $(YELLOW)docs/deployment/CI_CD_QUICK_START.md$(RESET)"
-	@echo "  📖 Full CI/CD guide: $(YELLOW)docs/deployment/CI_CD_GUIDE.md$(RESET)"
-	@echo ""
-	@echo "$(GREEN)🔧 Specialized Makefiles:$(RESET)"
-	@echo "  $(CYAN)make -f config/makefiles/Makefile.development$(RESET) [command]"
-	@echo "  $(CYAN)make -f config/makefiles/Makefile.production$(RESET) [command]"
-	@echo "  $(CYAN)make -f config/makefiles/Makefile.cicd$(RESET) [command]"
+# DEV параметры
+DEV_COMPOSE   := config/docker/docker-compose.dev.yml
+DEV_ENV       := .env.dev
 
-dev-setup: ## Setup development environment
-	@echo "$(BLUE)🔧 Setting up development environment...$(RESET)"
-	@echo "$(CYAN)📋 Creating necessary directories...$(RESET)"
-	@mkdir -p logs backups/database
-	@echo "$(CYAN)📋 Making scripts executable...$(RESET)"
-	@chmod +x scripts/deployment/*.sh scripts/deployment/*.py
-	@echo "$(CYAN)📋 Checking Docker...$(RESET)"
-	@docker info >/dev/null 2>&1 && echo "$(GREEN)✅ Docker is running$(RESET)" || echo "$(RED)❌ Docker is not running$(RESET)"
-	@echo "$(GREEN)✅ Development environment setup complete!$(RESET)"
-	@echo ""
-	@echo "$(YELLOW)💡 Next steps:$(RESET)"
-	@echo "  1. Copy and configure: cp config/environment/env.example .env"
-	@echo "  2. Start development: make dev-start"
+# PROD параметры
+PROD_COMPOSE  := docker-compose.production.yml
+PROD_ENV      := .env.production
 
-dev-start: ## Start development servers
-	@echo "$(BLUE)🚀 Starting development servers...$(RESET)"
-	@docker-compose -f config/docker/docker-compose.yml up -d
-	@echo "$(GREEN)✅ Development servers started!$(RESET)"
-	@echo "$(CYAN)Frontend: http://localhost:3000$(RESET)"
-	@echo "$(CYAN)Backend: http://localhost:8000$(RESET)"
+# Цвета
+B := \033[34m
+G := \033[32m
+Y := \033[33m
+R := \033[31m
+X := \033[0m
 
-dev-stop: ## Stop development servers
-	@echo "$(BLUE)🛑 Stopping development servers...$(RESET)"
-	@docker-compose -f config/docker/docker-compose.yml down
-	@echo "$(GREEN)✅ Development servers stopped!$(RESET)"
+##### 📖 HELP ################################################################
+help: ## Показать эту справку
+	@echo "$${B}🧬 LysoData-Miner – Makefile команды$${X}"
+	@echo "$${B}=======================================$${X}\n"
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
+		sort | \
+		awk 'BEGIN {FS = ":.*?## "} {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
+	@echo "\n$${Y}DEV стек:$${X} http://localhost:3000  API → :8000  DB → :5433 (или в .env.dev)"
+	@echo "$${Y}PROD стек:$${X} http://localhost:3000  API → :8000  DB → :5434 (или в .env.production)"
 
-deploy: ## Deploy to production (4feb server)
-	@echo "$(BLUE)🚀 Deploying to production...$(RESET)"
-	@make -f config/makefiles/Makefile.cicd deploy
+##### 🗂 DEV env helper #######################################################
 
-# CI/CD Commands (delegated to specialized makefile)
-cicd-help: ## Show CI/CD commands
-	@make -f config/makefiles/Makefile.cicd help
+dev-env: ## 🔑 Проверить или создать .env.dev
+	@if [ ! -f $(DEV_ENV) ]; then \
+	  echo "$(Y)⚠️  $(DEV_ENV) не найден, создаю...$(X)"; \
+	  if [ -f env.dev.example ]; then cp env.dev.example $(DEV_ENV); else touch $(DEV_ENV); fi; \
+	  echo "$(G)✅ $(DEV_ENV) создан. Проверьте параметры!$(X)"; \
+	fi
 
-cicd-deploy: ## Deploy using CI/CD system
-	@make -f config/makefiles/Makefile.cicd deploy
+##### 🛠 DEV КОМАНДЫ ##########################################################
 
-cicd-status: ## Show CI/CD system status
-	@make -f config/makefiles/Makefile.cicd cicd-status
+dev-start: dev-env ## �� Запустить DEV стек (автоматически останавливает prod)
+	@echo "$(Y)ℹ️  Останавливаю продакшн-контейнеры, чтобы освободить порты...$(X)"; \
+	$(DC) -f $(PROD_COMPOSE) --env-file $(PROD_ENV) down --remove-orphans || true
+	$(DC) -f $(DEV_COMPOSE) --env-file $(DEV_ENV) up -d
 
-cicd-setup: ## Setup CI/CD system
-	@make -f config/makefiles/Makefile.cicd cicd-setup
+dev-backend: dev-env ## 🐍 Запустить/перезапустить backend (DEV)
+	$(DC) -f $(DEV_COMPOSE) --env-file $(DEV_ENV) up -d backend
 
-# Project status
-status: ## Show project status
-	@echo "$(BLUE)📊 LysoData-Miner Project Status$(RESET)"
-	@echo "$(BLUE)===============================$(RESET)"
-	@echo ""
-	@echo "$(GREEN)🔧 System Components:$(RESET)"
-	@echo -n "  Docker: "
-	@docker info >/dev/null 2>&1 && echo "$(GREEN)✅ Running$(RESET)" || echo "$(RED)❌ Not running$(RESET)"
-	@echo -n "  Git: "
-	@git status >/dev/null 2>&1 && echo "$(GREEN)✅ Repository OK$(RESET)" || echo "$(RED)❌ Not a git repository$(RESET)"
-	@echo ""
-	@echo "$(GREEN)📁 Project Structure:$(RESET)"
-	@echo "  📚 Documentation: $(shell find docs -name "*.md" | wc -l) files"
-	@echo "  🚀 Scripts: $(shell find scripts -name "*.sh" -o -name "*.py" | wc -l) files"
-	@echo "  ⚙️ Config files: $(shell find config -name "*.yml" -o -name "*.example" | wc -l) files"
-	@echo "  💾 Backups: $(shell find backups -name "*" -type f 2>/dev/null | wc -l) files"
+dev-frontend: dev-env ## ⚛️  Запустить/перезапустить frontend (DEV)
+	$(DC) -f $(DEV_COMPOSE) --env-file $(DEV_ENV) up -d frontend
 
-clean: ## Clean temporary files
-	@echo "$(BLUE)🧹 Cleaning temporary files...$(RESET)"
-	@rm -f *.log *.pid .last_*
-	@rm -rf __pycache__ .pytest_cache
-	@echo "$(GREEN)✅ Temporary files cleaned!$(RESET)"
+dev-stop: dev-env ## 🛑 Остановить DEV стек
+	$(DC) -f $(DEV_COMPOSE) --env-file $(DEV_ENV) down
 
-.PHONY: help dev-setup dev-start dev-stop deploy cicd-help cicd-deploy cicd-status cicd-setup status clean
+dev-status: dev-env ## 📊 Статус DEV контейнеров
+	$(DC) -f $(DEV_COMPOSE) --env-file $(DEV_ENV) ps
 
-dev: dev-start ## Alias for dev-start (backward compatibility)
+dev-logs: dev-env ## 📋 Логи DEV (follow)
+	$(DC) -f $(DEV_COMPOSE) --env-file $(DEV_ENV) logs -f
 
-stop: dev-stop ## Alias for dev-stop (backward compatibility)
+##### 🚀 PROD КОМАНДЫ #########################################################
+
+prod-start: ## 🚀 Запустить PROD стек (с билдом при первом запуске)
+	$(DC) -f $(PROD_COMPOSE) --env-file $(PROD_ENV) up -d --build
+	@echo "$${G}✅ PROD запущен → Frontend http://localhost:$$(grep -E '^WEB_PORT=' $(PROD_ENV) | cut -d'=' -f2 || echo 3000)$${X}"
+
+prod-stop: ## 🛑 Остановить PROD стек
+	$(DC) -f $(PROD_COMPOSE) --env-file $(PROD_ENV) down
+
+prod-build: ## 🏗️  Пересобрать образы PROD
+	$(DC) -f $(PROD_COMPOSE) --env-file $(PROD_ENV) build
+
+prod-restart: ## 🔄 Перезапустить PROD стек
+	$(MAKE) prod-stop
+	$(MAKE) prod-start
+
+prod-status: ## 📊 Статус PROD контейнеров
+	$(DC) -f $(PROD_COMPOSE) --env-file $(PROD_ENV) ps
+
+prod-logs: ## 📋 Логи PROD (follow)
+	$(DC) -f $(PROD_COMPOSE) --env-file $(PROD_ENV) logs -f
+
+##### 💾 Бэкапы ###############################################################
+
+db-backup: ## 💾 Создать backup базы (prod)
+	@mkdir -p backups
+	@FILE=backups/backup_$$(date +%Y%m%d_%H%M%S).sql.gz; \
+	docker exec lysodata_db pg_dump -U lysobacter_user lysobacter_db | gzip > $$FILE && \
+	echo "$${G}✅ Бэкап сохранён в $$FILE$${X}"
+
+db-restore: ## ♻️  Восстановить базу (используй BACKUP=файл.sql.gz)
+	@if [ -z "$(BACKUP)" ]; then \
+		echo "$${R}❌ Укажите BACKUP=/path/to/file.sql.gz$${X}"; exit 1; fi
+	@gunzip -c $(BACKUP) | docker exec -i lysodata_db psql -U lysobacter_user -d lysobacter_db
+	@echo "$${G}✅ База восстановлена из $(BACKUP)$${X}"
