@@ -103,3 +103,7 @@ clean: ## Clean temporary files
 	@echo "$(GREEN)✅ Temporary files cleaned!$(RESET)"
 
 .PHONY: help dev-setup dev-start dev-stop deploy cicd-help cicd-deploy cicd-status cicd-setup status clean
+
+dev: dev-start ## Alias for dev-start (backward compatibility)
+
+stop: dev-stop ## Alias for dev-stop (backward compatibility)
