@@ -100,3 +100,10 @@ coverage.xml
 # Logs
 *.log
 logs/ 
+
+frontend/node_modules/
+
+# Frontend build and caches
+frontend/dist/
+frontend/.vite/
+.eslintcache

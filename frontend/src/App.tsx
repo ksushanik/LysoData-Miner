@@ -10,6 +10,8 @@ import ComparePage from './pages/ComparePage'
 import CreateStrainPage from './pages/CreateStrainPage'
 import EditStrainPage from './pages/EditStrainPage'
 import Dashboard from './pages/Dashboard'
+import WikiPage from './pages/Docs/WikiPage'
+import FAQPage from './pages/Docs/FAQPage'
 
 function App() {
   return (
@@ -24,6 +26,9 @@ function App() {
         <Route path="/identify" element={<Identification />} />
         <Route path="/about" element={<About />} />
         <Route path="/compare" element={<ComparePage />} />
+        <Route path="/help" element={<WikiPage />} />
+        <Route path="/wiki" element={<Navigate to="/help" replace />} />
+        <Route path="/faq" element={<FAQPage />} />
       </Routes>
     </Layout>
   );

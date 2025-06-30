@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { CompareProvider } from '../context/CompareContext'
 import CompareBar from './CompareBar'
+import HelpButton from './HelpButton'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -10,11 +11,15 @@ interface LayoutProps {
 const navigation = [
   { name: 'Browse Strains', href: '/strains' },
   { name: 'Identify Strain', href: '/identify' },
+  { name: 'Help', href: '/help' },
   { name: 'About', href: '/about' },
 ]
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
+  
+  // Hide help button on help-related pages
+  const hideHelpButton = ['/help', '/faq'].includes(location.pathname)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -61,6 +66,7 @@ export default function Layout({ children }: LayoutProps) {
         <CompareProvider>
           {children}
           <CompareBar />
+          {!hideHelpButton && <HelpButton />}
         </CompareProvider>
       </main>
 

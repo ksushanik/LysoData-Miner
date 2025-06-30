@@ -3,6 +3,7 @@ import { Beaker, ClipboardList, Dna, FileText, FlaskConical, HardDrive, Library,
 import { getDashboardStats } from '@/services/api';
 import StatCard from '@/components/StatCard';
 import NavCard from '@/components/NavCard';
+import QuickHelpCard from '@/components/QuickHelpCard';
 
 interface Stats {
   total_species: number;
@@ -68,23 +69,29 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Основные разделы</h2>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <NavCard 
-                to="/strains"
-                Icon={PencilRuler}
-                title="Обзор штаммов"
-                description="Поиск и фильтрация по всей базе данных штаммов."
-                className="before:bg-sky-500"
-            />
-            <NavCard 
-                to="/identify"
-                Icon={LocateFixed}
-                title="Идентификация штамма"
-                description="Определение наиболее вероятных видов по результатам тестов."
-                className="before:bg-teal-500"
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Основные разделы</h2>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <NavCard 
+                  to="/strains"
+                  Icon={PencilRuler}
+                  title="Обзор штаммов"
+                  description="Поиск и фильтрация по всей базе данных штаммов."
+                  className="before:bg-sky-500"
+              />
+              <NavCard 
+                  to="/identify"
+                  Icon={LocateFixed}
+                  title="Идентификация штамма"
+                  description="Определение наиболее вероятных видов по результатам тестов."
+                  className="before:bg-teal-500"
+              />
+          </div>
+        </div>
+        
+        <div className="lg:col-span-1">
+          <QuickHelpCard />
         </div>
       </div>
     </div>

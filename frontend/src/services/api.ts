@@ -75,7 +75,7 @@ export const fetchTestCategories = async (includeTests: boolean = true): Promise
 export const getDashboardStats = async () => {
   const res = await api.get('/stats/');
   return res.data;
-}
+} 
 
 export const fetchSpecies = async () => {
   const res = await api.get('/species');
