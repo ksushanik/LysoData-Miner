@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchSpecies as fetchSpeciesAPI } from '../services/api'
 
 interface Species {
-  scientific_name: string
+  scientific_name: string | null
   strain_count: number
 }
 
@@ -32,7 +32,7 @@ export default function SpeciesBrowser() {
   }, [])
 
   const filteredSpecies = speciesList.filter((s) =>
-    s.scientific_name.toLowerCase().includes(searchTerm.toLowerCase())
+    s.scientific_name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   if (loading) {
@@ -86,14 +86,14 @@ export default function SpeciesBrowser() {
 
       {/* Species grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredSpecies.map((sp) => (
+        {filteredSpecies.map((sp, index) => (
           <Link
-            key={sp.scientific_name}
-            to={`/strains/species/${encodeURIComponent(sp.scientific_name)}`}
+            key={sp.scientific_name || `unknown-${index}`}
+            to={`/strains/species/${encodeURIComponent(sp.scientific_name || 'unknown')}`}
             className="block bg-white rounded-lg shadow-sm border border-border p-6 hover:shadow-md hover:border-primary/50 transition-all"
           >
             <h3 className="text-lg font-semibold text-foreground italic mb-2">
-              {sp.scientific_name}
+              {sp.scientific_name || 'Unknown species'}
             </h3>
             <p className="text-sm text-muted-foreground">
               {sp.strain_count} strain{sp.strain_count !== 1 ? 's' : ''} available

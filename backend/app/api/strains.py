@@ -331,6 +331,9 @@ async def list_species(
         filters = []
         if active_only:
             filters.append(Strain.is_active == True)
+        
+        # Always exclude null scientific names
+        filters.append(Strain.scientific_name.is_not(None))
 
         stmt = select(
             Strain.scientific_name,
