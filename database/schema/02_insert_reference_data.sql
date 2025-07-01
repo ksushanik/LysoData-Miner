@@ -18,9 +18,8 @@ INSERT INTO lysobacter.test_categories (category_name, description, sort_order) 
 -- ========================================
 
 INSERT INTO lysobacter.tests (category_id, test_name, test_code, test_type, description, sort_order) VALUES
--- Morphological properties
-((SELECT category_id FROM lysobacter.test_categories WHERE category_name = 'morphological'), 'Spore Formation', 'spore_formation', 'boolean', 'Presence of spores, ability to form spores', 1),
-((SELECT category_id FROM lysobacter.test_categories WHERE category_name = 'morphological'), 'Motility', 'motility', 'boolean', 'Motility of the organism', 2);
+-- Morphological properties (spore_formation removed - all Lysobacter are non-spore-forming)
+((SELECT category_id FROM lysobacter.test_categories WHERE category_name = 'morphological'), 'Motility', 'motility', 'boolean', 'Motility of the organism', 1);
 
 -- ========================================
 -- PHYSIOLOGICAL TESTS

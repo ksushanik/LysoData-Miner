@@ -45,8 +45,8 @@ notes: Shows strong antifungal activity against plant pathogens
 ## 2. ТОЧНЫЕ КОДЫ ТЕСТОВ И ЗНАЧЕНИЯ
 
 ### МОРФОЛОГИЧЕСКИЕ ТЕСТЫ (morphological)
-- `spore_formation` - Значения: "+", "-", "+/-", "n.d."
 - `motility` - Значения: "+", "-", "+/-", "n.d."
+(NOTE: spore_formation removed - all Lysobacter are non-spore-forming gram-negative rods)
 
 ### ФИЗИОЛОГИЧЕСКИЕ ТЕСТЫ (physiological)
 - `temperature` - Числовые значения в °C (указать value_type)

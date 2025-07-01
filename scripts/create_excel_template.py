@@ -66,20 +66,20 @@ def create_excel_template():
     # ЛИСТ 2: TestResults (Результаты тестов)
     test_results_data = {
         'strain_identifier': [
-            # Морфологические тесты для LYS-001
-            'LYS-001', 'LYS-001',
+            # Морфологические тесты для LYS-001 (only motility)
+            'LYS-001',
             # Физиологические тесты для LYS-001  
             'LYS-001', 'LYS-001', 'LYS-001', 'LYS-001', 'LYS-001', 'LYS-001',
             # Биохимические тесты для LYS-001
             'LYS-001', 'LYS-001', 'LYS-001', 'LYS-001',
             # Утилизация сахаров для LYS-001
             'LYS-001', 'LYS-001', 'LYS-001',
-            # Примеры для других штаммов
-            'LYS-002', 'LYS-002', 'ATCC-123', 'DSM-456'
+            # Примеры для других штаммов (3 entries now)
+            'LYS-002', 'ATCC-123', 'DSM-456'
         ],
         'test_code': [
-            # Морфологические тесты
-            'spore_formation', 'motility',
+            # Морфологические тесты (spore_formation removed - all Lysobacter are non-spore-forming)
+            'motility',
             # Физиологические тесты (диапазоны температуры и pH)
             'temperature', 'temperature', 'temperature',
             'ph_level', 'ph_level', 'salt_tolerance',
@@ -87,12 +87,12 @@ def create_excel_template():
             'catalase', 'oxidase', 'proteolytic_activity', 'starch',
             # Утилизация сахаров
             'glucose_fermentation', 'maltose', 'lactose',
-            # Другие штаммы
-            'spore_formation', 'catalase', 'motility', 'temperature'
+            # Другие штаммы (spore_formation removed)
+            'catalase', 'motility', 'temperature'
         ],
         'result_value': [
-            # LYS-001 морфологические
-            '-', '+',
+            # LYS-001 морфологические (only motility)
+            '+',
             # LYS-001 физиологические (температурный диапазон)
             '15', '35', '25',  # мин, макс, оптимальная температура
             '6.0', '8.5', '+', # pH диапазон и солеустойчивость
@@ -100,12 +100,12 @@ def create_excel_template():
             '+', '+', '+', '+',
             # LYS-001 утилизация сахаров
             '+', '+', '-',
-            # Другие штаммы
-            '+', '+', '+/-', '20'
+            # Другие штаммы (3 entries)
+            '+', '+/-', '20'
         ],
         'value_type': [
-            # Булевые тесты (пустые значения)
-            '', '',
+            # Булевые тесты (only motility)
+            '',
             # Числовые тесты (обязательно указать тип)
             'minimum', 'maximum', 'optimal',
             'minimum', 'maximum', '',
@@ -113,12 +113,12 @@ def create_excel_template():
             '', '', '', '',
             # Булевые тесты
             '', '', '',
-            # Другие штаммы
-            '', '', '', 'optimal'
+            # Другие штаммы (3 entries)
+            '', '', 'optimal'
         ],
         'measurement_unit': [
-            # Морфологические (без единиц)
-            '', '',
+            # Морфологические (only motility)
+            '',
             # Температура
             '°C', '°C', '°C',
             # pH
@@ -127,27 +127,26 @@ def create_excel_template():
             '', '', '', '',
             # Утилизация (без единиц)
             '', '', '',
-            # Другие штаммы
-            '', '', '', '°C'
+            # Другие штаммы (3 entries)
+            '', '', '°C'
         ],
         'confidence_level': [
-            'high', 'high',
+            'high',
             'high', 'high', 'high',
             'high', 'medium', 'high',
             'high', 'high', 'high', 'high',
             'high', 'high', 'medium',
-            'high', 'high', 'low', 'high'
+            'high', 'low', 'high'
         ],
         'tested_date': [
-            '2023-06-01', '2023-06-01',
+            '2023-06-01',
             '2023-06-02', '2023-06-02', '2023-06-02',
             '2023-06-02', '2023-06-02', '2023-06-03',
             '2023-06-03', '2023-06-03', '2023-06-04', '2023-06-04',
             '2023-06-05', '2023-06-05', '2023-06-05',
-            '2023-06-10', '2023-06-11', '2023-06-12', '2023-06-13'
+            '2023-06-10', '2023-06-12', '2023-06-13'
         ],
         'notes': [
-            'No spore formation observed',
             'Strong motility under microscope',
             'Minimum growth temperature',
             'Maximum growth temperature', 
@@ -162,7 +161,6 @@ def create_excel_template():
             'Glucose fermentation observed',
             'Maltose utilization confirmed',
             'No lactose utilization',
-            'Spore formation positive',
             'Catalase test positive',
             'Weak motility observed',
             'Optimal growth temperature'
@@ -198,7 +196,7 @@ def create_excel_template():
 - Тестируемые коды: {', '.join(sorted(test_results_df['test_code'].unique()))}
 
 ТИПЫ ТЕСТОВ В ШАБЛОНЕ:
-- Морфологические: spore_formation, motility
+- Морфологические: motility (spore_formation removed - all Lysobacter are non-spore-forming)
 - Физиологические: temperature, ph_level, salt_tolerance  
 - Биохимические: catalase, oxidase, proteolytic_activity, starch
 - Утилизация: glucose_fermentation, maltose, lactose

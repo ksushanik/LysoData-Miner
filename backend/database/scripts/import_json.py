@@ -423,16 +423,7 @@ class LysobacterJSONImporter:
                     "isolation_date": "2023-01-01",
                     "notes": "Template strain - replace with real data",
                     "test_results": [
-                        {
-                            "test_code": "spore_formation",
-                            "result_value": "-",
-                            "test_type": "boolean",
-                            "value_type": None,
-                            "measurement_unit": None,
-                            "confidence_level": "high",
-                            "tested_date": "2023-01-02",
-                            "notes": "No spores observed"
-                        },
+
                         {
                             "test_code": "motility",
                             "result_value": "+",

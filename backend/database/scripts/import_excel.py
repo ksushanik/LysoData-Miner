@@ -346,7 +346,7 @@ class LysobacterImporter:
         # Test results template
         test_results_data = {
             'strain_identifier': ['LYS-001', 'LYS-001', 'LYS-001', 'LYS-002', 'LYS-002'],
-            'test_code': ['spore_formation', 'temperature', 'temperature', 'catalase', 'ph_level'],
+            'test_code': ['temperature', 'temperature', 'catalase', 'ph_level'],
             'result_value': ['+', '25.0', '37.0', '+', '7.5'],
             'value_type': ['', 'optimal', 'maximum', '', 'optimal'],
             'measurement_unit': ['', '°C', '°C', '', 'pH'],
