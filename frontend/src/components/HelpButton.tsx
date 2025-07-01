@@ -1,14 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { HelpCircle, X, ExternalLink } from 'lucide-react'
+import { CompareContext } from '@/context/CompareContext'
 
 const HelpButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const { selected } = useContext(CompareContext)
+  const isCompareVisible = selected.length > 0
 
   return (
     <>
       {/* Floating Help Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div
+        className={`fixed right-6 z-50 transition-all duration-300 ${isCompareVisible ? 'bottom-28' : 'bottom-6'}`}
+      >
         <button
           onClick={() => setIsOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg transition-colors duration-200 group"
