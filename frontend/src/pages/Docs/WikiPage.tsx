@@ -9,6 +9,7 @@ import {
   Sparkles,
   ExternalLink
 } from 'lucide-react'
+import { useStats, DashboardStats } from '@/hooks/useStats'
 
 interface WikiSection {
   id: string
@@ -19,13 +20,14 @@ interface WikiSection {
 
 const WikiPage: React.FC = () => {
   const [activeSection, setActiveSection] = useState('overview')
+  const { stats } = useStats()
 
   const sections: WikiSection[] = [
     {
       id: 'overview',
       title: 'Обзор системы',
       icon: BookOpen,
-      content: <OverviewSection />
+      content: <OverviewSection stats={stats} />
     },
     {
       id: 'getting-started',
@@ -43,7 +45,7 @@ const WikiPage: React.FC = () => {
       id: 'browsing',
       title: 'Просмотр данных',
       icon: HelpCircle,
-      content: <BrowsingSection />
+      content: <BrowsingSection stats={stats} />
     },
     {
       id: 'troubleshooting',
@@ -55,7 +57,7 @@ const WikiPage: React.FC = () => {
       id: 'technical',
       title: 'Техническая информация',
       icon: Settings,
-      content: <TechnicalSection />
+      content: <TechnicalSection stats={stats} />
     }
   ]
 
@@ -141,14 +143,18 @@ const WikiPage: React.FC = () => {
 }
 
 // Section Components
-const OverviewSection: React.FC = () => (
+interface OverviewProps { stats: DashboardStats | null }
+
+const format = (n?: number) => (n === undefined ? '–' : n.toLocaleString('ru-RU'))
+
+const OverviewSection: React.FC<OverviewProps> = ({ stats }) => (
   <div className="space-y-6">
     <div>
       <h3 className="text-xl font-semibold mb-3">Что такое LysoData-Miner?</h3>
       <p className="text-gray-700 mb-4">
-        LysoData-Miner — это веб-приложение для идентификации штаммов бактерий Lysobacter 
-        на основе результатов лабораторных тестов. Система содержит данные о 228 штаммах 
-        и 459 различных тестах из научных публикаций.
+        LysoData-Miner — это веб-приложение для идентификации штаммов бактерий Lysobacter
+        на основе результатов лабораторных тестов. Система содержит данные о {format(stats?.total_strains)} штаммах
+        и {format(stats?.total_test_results)} результатах тестов из научных публикаций.
       </p>
     </div>
 
@@ -166,19 +172,19 @@ const OverviewSection: React.FC = () => (
       <h4 className="text-lg font-semibold mb-2">Данные системы:</h4>
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">228</div>
+          <div className="text-2xl font-bold text-blue-600">{format(stats?.total_strains)}</div>
           <div className="text-sm text-gray-600">штаммов Lysobacter</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">459</div>
-          <div className="text-sm text-gray-600">различных тестов</div>
+          <div className="text-2xl font-bold text-green-600">{format(stats?.total_categories)}</div>
+          <div className="text-sm text-gray-600">категорий тестов</div>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600">9,950</div>
+          <div className="text-2xl font-bold text-purple-600">{format(stats?.total_test_results)}</div>
           <div className="text-sm text-gray-600">результатов тестов</div>
         </div>
         <div className="bg-orange-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-orange-600">84</div>
+          <div className="text-2xl font-bold text-orange-600">{format(stats?.total_sources)}</div>
           <div className="text-sm text-gray-600">научных источника</div>
         </div>
       </div>
@@ -317,7 +323,9 @@ const IdentificationSection: React.FC = () => (
   </div>
 )
 
-const BrowsingSection: React.FC = () => (
+interface StatsProps { stats: DashboardStats | null }
+
+const BrowsingSection: React.FC<StatsProps> = ({ stats }) => (
   <div className="space-y-6">
     <div>
       <h3 className="text-xl font-semibold mb-3">Просмотр и поиск данных</h3>
@@ -329,7 +337,7 @@ const BrowsingSection: React.FC = () => (
     <div>
       <h4 className="text-lg font-semibold mb-3">Просмотр по видам:</h4>
       <ul className="list-disc pl-6 space-y-2 text-gray-700">
-        <li>62 различных вида Lysobacter</li>
+        <li>{format(stats?.total_species)} различных вида Lysobacter</li>
         <li>Количество штаммов для каждого вида</li>
         <li>Ссылки на детальную информацию о штаммах</li>
       </ul>
@@ -424,7 +432,7 @@ const TroubleshootingSection: React.FC = () => (
   </div>
 )
 
-const TechnicalSection: React.FC = () => (
+const TechnicalSection: React.FC<StatsProps> = ({ stats }) => (
   <div className="space-y-6">
     <div>
       <h3 className="text-xl font-semibold mb-3">Техническая информация</h3>
@@ -466,7 +474,7 @@ const TechnicalSection: React.FC = () => (
         <li>Время ответа API: менее 100ms</li>
         <li>Время идентификации: около 50ms</li>
         <li>Поддержка до 100 одновременных пользователей</li>
-        <li>База данных: 228 штаммов, 9,950 результатов тестов</li>
+        <li>База данных: {format(stats?.total_strains)} штаммов, {format(stats?.total_test_results)} результатов тестов</li>
       </ul>
     </div>
 

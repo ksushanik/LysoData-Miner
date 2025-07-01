@@ -16,8 +16,8 @@ CYAN := \033[36m
 RESET := \033[0m
 
 # Configuration
-DEPLOY_SCRIPT := ./scripts/deploy_to_4feb.sh
-WATCH_SCRIPT := ./scripts/watch_and_deploy.sh
+DEPLOY_SCRIPT := ./scripts/deployment/deploy_to_4feb.sh
+WATCH_SCRIPT := ./scripts/deployment/watch_and_deploy.sh
 WEBHOOK_SCRIPT := ./scripts/webhook_server.py
 WEBHOOK_PORT := 9000
 

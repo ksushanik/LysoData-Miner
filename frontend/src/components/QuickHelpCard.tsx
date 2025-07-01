@@ -1,8 +1,13 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { HelpCircle, ExternalLink } from 'lucide-react'
+import { useStats } from '@/hooks/useStats'
+
+const format = (n?: number) => (n === undefined ? '–' : n.toLocaleString('ru-RU'))
 
 const QuickHelpCard: React.FC = () => {
+  const { stats } = useStats()
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center mb-4">
@@ -27,9 +32,9 @@ const QuickHelpCard: React.FC = () => {
             Используйте <Link to="/strains" className="text-blue-600 hover:underline">"Browse Strains"</Link> для изучения базы данных:
           </p>
           <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside ml-4">
-            <li>62 различных вида Lysobacter</li>
-            <li>228 штаммов с детальной информацией</li>
-            <li>Результаты 459 различных тестов</li>
+            <li>{format(stats?.total_species)} различных вида Lysobacter</li>
+            <li>{format(stats?.total_strains)} штаммов с детальной информацией</li>
+            <li>{format(stats?.total_test_results)} результатов тестов</li>
           </ul>
         </div>
 

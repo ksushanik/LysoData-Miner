@@ -1,0 +1,130 @@
+# 🧬 LysoData-Miner Production Makefile
+# =====================================
+# Production deployment and management for Lysobacter strain identification system
+# 
+# Usage:
+#   make up     - Build and start all services
+#   make down   - Stop all services
+#   make status - Show service status
+#   make logs   - Show all logs
+#   make clean  - Remove all containers and volumes (DESTRUCTIVE!)
+
+COMPOSE_FILE := docker-compose.production.yml
+
+# Default environment
+POSTGRES_DB ?= lysobacter_db
+POSTGRES_USER ?= lysobacter_user
+POSTGRES_PASSWORD ?= lysobacter_password
+
+# Ports
+WEB_PORT ?= 3000
+BACKEND_PORT ?= 8000
+DB_PORT ?= 5434
+PGADMIN_PORT ?= 8082
+
+.PHONY: help up down restart status logs clean build health backup restore
+
+# 📖 Help
+help:
+	@echo "🧬 LysoData-Miner Production Management"
+	@echo "====================================="
+	@echo ""
+	@echo "🚀 Basic Commands:"
+	@echo "  make up       - Build and start all services"
+	@echo "  make down     - Stop all services"
+	@echo "  make restart  - Restart all services"
+	@echo "  make status   - Show service status"
+	@echo "  make logs     - Show all logs"
+	@echo ""
+	@echo "🔧 Management:"
+	@echo "  make build    - Rebuild images"
+	@echo "  make health   - Check service health"
+	@echo "  make backup   - Create database backup"
+	@echo "  make clean    - Remove all containers and volumes (DESTRUCTIVE!)"
+	@echo ""
+	@echo "🔍 Monitoring:"
+	@echo "  make logs-backend   - Backend logs"
+	@echo "  make logs-frontend  - Frontend logs"
+	@echo "  make logs-db        - Database logs"
+	@echo ""
+	@echo "📊 Current Config:"
+	@echo "  Web Port:     $(WEB_PORT)"
+	@echo "  API Port:     $(BACKEND_PORT)"
+	@echo "  DB Port:      $(DB_PORT)"
+	@echo "  Admin Port:   $(PGADMIN_PORT)"
+
+# 🚀 Start services
+up:
+	@echo "🚀 Starting LysoData-Miner production services..."
+	POSTGRES_DB=$(POSTGRES_DB) POSTGRES_USER=$(POSTGRES_USER) POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+	WEB_PORT=$(WEB_PORT) BACKEND_PORT=$(BACKEND_PORT) DB_PORT=$(DB_PORT) PGADMIN_PORT=$(PGADMIN_PORT) \
+	docker-compose -f $(COMPOSE_FILE) up -d
+	@echo "✅ Services started!"
+	@echo "🌐 Frontend: http://localhost:$(WEB_PORT)"
+	@echo "🔌 Backend API: http://localhost:$(BACKEND_PORT)"
+	@echo "📚 API Docs: http://localhost:$(BACKEND_PORT)/docs"
+
+# 🛑 Stop services
+down:
+	@echo "🛑 Stopping LysoData-Miner services..."
+	docker-compose -f $(COMPOSE_FILE) down
+	@echo "✅ Services stopped!"
+
+# 🔄 Restart services
+restart: down up
+
+# 📊 Service status
+status:
+	@echo "📊 LysoData-Miner Service Status:"
+	@echo "================================"
+	docker-compose -f $(COMPOSE_FILE) ps
+
+# 📋 Show logs
+logs:
+	docker-compose -f $(COMPOSE_FILE) logs -f
+
+logs-backend:
+	docker-compose -f $(COMPOSE_FILE) logs -f backend
+
+logs-frontend:
+	docker-compose -f $(COMPOSE_FILE) logs -f frontend
+
+logs-db:
+	docker-compose -f $(COMPOSE_FILE) logs -f database
+
+# 🔨 Build images
+build:
+	@echo "🔨 Building LysoData-Miner images..."
+	POSTGRES_DB=$(POSTGRES_DB) POSTGRES_USER=$(POSTGRES_USER) POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+	docker-compose -f $(COMPOSE_FILE) build --no-cache
+	@echo "✅ Images built!"
+
+# 🏥 Health check
+health:
+	@echo "🏥 Checking service health..."
+	@echo ""
+	@echo "🔍 Backend health:"
+	@curl -sf http://localhost:$(BACKEND_PORT)/api/health/ || echo "❌ Backend not responding"
+	@echo ""
+	@echo "🔍 Frontend health:"
+	@curl -sf http://localhost:$(WEB_PORT) >/dev/null && echo "✅ Frontend responding" || echo "❌ Frontend not responding"
+	@echo ""
+	@echo "🔍 Database health:"
+	@docker-compose -f $(COMPOSE_FILE) exec -T database pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB) && echo "✅ Database ready" || echo "❌ Database not ready"
+
+# 💾 Database backup
+backup:
+	@echo "💾 Creating database backup..."
+	@mkdir -p ./backups
+	docker-compose -f $(COMPOSE_FILE) exec -T database pg_dump -U $(POSTGRES_USER) -d $(POSTGRES_DB) --clean --if-exists > ./backups/backup_$(shell date +%Y%m%d_%H%M%S).sql
+	@echo "✅ Backup created in ./backups/"
+
+# 🧹 Clean everything (DESTRUCTIVE!)
+clean:
+	@echo "⚠️  This will remove ALL containers, volumes, and data!"
+	@echo "Are you sure? Press Ctrl+C to cancel, or Enter to continue..."
+	@read confirm
+	@echo "🧹 Cleaning up..."
+	docker-compose -f $(COMPOSE_FILE) down -v --remove-orphans
+	docker system prune -f
+	@echo "✅ Cleanup completed!" 

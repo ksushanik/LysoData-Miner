@@ -84,23 +84,39 @@ make dev  # Starts both backend and frontend
 
 ```bash
 # Development
-make install          # Install all dependencies
-make dev             # Start development servers
-make build           # Build for production
+make dev-start       # Start DEV environment (backend + frontend + database)
+make dev-stop        # Stop DEV environment
+make dev-logs        # View development logs
+make dev-rebuild     # Rebuild development containers
+
+# Production
+make prod-start      # Start PROD environment locally
+make prod-stop       # Stop PROD environment
+make prod-build      # Build production images
+
+# 🚀 Deployment (to 4feb server)
+make deploy          # Simple full deployment (build + migrate + update)
+make deploy-quick    # Quick deployment (update containers only)
+make deploy-force    # Force rebuild and deploy
+make deploy-advanced # Advanced deploy with tests and checks
+make deploy-dry      # Preview deployment actions (safe testing)
+
+# Deployment Components
+make deploy-build    # Build and push Docker images to Hub
+make deploy-migrate  # Run database migrations on server
+make deploy-update   # Update containers on server
+make deploy-status   # Check deployment status
+make deploy-logs     # View server logs
+
+# Specialized Deployment
+make deploy-frontend-only  # Deploy only frontend
+make deploy-backend-only   # Deploy only backend
 
 # Database Management
-make db-start        # Start PostgreSQL container
-make db-stop         # Stop PostgreSQL container
-make db-shell        # Connect to database shell
-
-# Docker Operations
-make docker-up       # Start all services with Docker
-make docker-down     # Stop all Docker services
-make docker-build    # Build Docker images
+make db-backup       # Create database backup
+make db-restore      # Restore database (BACKUP=file.sql.gz)
 
 # Utilities
-make clean           # Clean build artifacts
-make status          # Show service status
 make help            # Show all available commands
 ```
 
@@ -246,15 +262,71 @@ npm run type-check
 
 ## 📦 Deployment
 
-### Development Deployment
+### 🚀 **Automated Deployment to Production Server**
+
+LysoData-Miner includes a comprehensive CI/CD deployment system that automates the entire process from code changes to running production services.
+
+#### **Quick Start Deployment**
 ```bash
-make docker-up  # Start all services with Docker Compose
+# Test deployment first (safe)
+make deploy-dry      # Preview what will happen
+
+# Full production deployment
+make deploy-advanced # Complete deployment with tests and checks
 ```
 
-### Production Deployment
+#### **Deployment Process**
+The automated deployment includes:
+
+1. **🧪 Testing** - Runs backend (pytest) and frontend (npm test) tests
+2. **🏗️ Building** - Creates optimized Docker images with timestamps
+3. **📤 Registry** - Pushes images to Docker Hub (gimmyhat/lysodata-*)
+4. **💾 Backup** - Creates database backup before deployment
+5. **🔄 Update** - Downloads new images and recreates containers
+6. **🗄️ Migrations** - Automatically runs Django database migrations
+7. **📁 Static Files** - Collects Django static files
+8. **🏥 Health Checks** - Verifies backend API and frontend accessibility
+
+#### **Deployment Commands**
+
 ```bash
-make build      # Build optimized frontend
-# Deploy using your preferred method (Docker, K8s, etc.)
+# Recommended workflow
+make deploy-dry      # 1. Preview deployment (no changes made)
+make deploy-advanced # 2. Full deployment with all checks
+
+# Alternative deployment options
+make deploy          # Simple deployment (build + migrate + update)
+make deploy-quick    # Update containers only (fastest)
+make deploy-force    # Force rebuild everything
+
+# Component-specific deployment
+make deploy-frontend-only  # Deploy only frontend changes
+make deploy-backend-only   # Deploy only backend changes
+
+# Deployment management
+make deploy-status   # Check current deployment status
+make deploy-logs     # View server logs
+```
+
+#### **Production Server Details**
+- **Server**: 4feb (89.169.171.236)
+- **Frontend**: http://89.169.171.236:3000
+- **Backend API**: http://89.169.171.236:8000
+- **API Docs**: http://89.169.171.236:8000/api/docs
+
+#### **Safety Features**
+- ✅ **Dry Run Mode** - Test deployments safely with `deploy-dry`
+- ✅ **Automatic Backups** - Database backed up before each deployment
+- ✅ **Health Checks** - Deployment fails if services don't start properly
+- ✅ **Change Detection** - Only rebuilds components that have changed
+- ✅ **Rollback Ready** - Backup files available for quick restoration
+
+### Local Development
+```bash
+make dev-start       # Start development environment
+# Make your changes...
+make deploy-dry      # Test deployment first
+make deploy-advanced # Deploy to production
 ```
 
 ## 🤝 Contributing

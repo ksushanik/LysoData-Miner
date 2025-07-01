@@ -226,6 +226,18 @@ deploy_remote() {
     echo -e "${YELLOW}🚀 Starting services with new images...${RESET}"
     run_remote "cd $REMOTE_DIR && docker compose -f docker-compose.hub.yml up -d"
     
+    # Wait for database to be ready
+    echo -e "${YELLOW}⏳ Waiting for database to be ready...${RESET}"
+    sleep 15
+    
+    # Run database migrations
+    echo -e "${YELLOW}🗄️ Running database migrations...${RESET}"
+    run_remote "cd $REMOTE_DIR && docker compose -f docker-compose.hub.yml exec -T backend python manage.py migrate"
+    
+    # Collect static files (if needed)
+    echo -e "${YELLOW}📁 Collecting static files...${RESET}"
+    run_remote "cd $REMOTE_DIR && docker compose -f docker-compose.hub.yml exec -T backend python manage.py collectstatic --noinput"
+    
     # Wait for services to be ready
     echo -e "${YELLOW}⏳ Waiting for services to start...${RESET}"
     sleep 30
